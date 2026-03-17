@@ -1,0 +1,30 @@
+{
+  "id": "my-quiz",
+  "title": "my quiz",
+  "description": "my testing",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the capital of France?",
+      "optionA": "London",
+      "optionB": "Paris",
+      "optionC": "Berlin",
+      "optionD": "Madrid",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 2,
+      "question": "2 + 2 = ?",
+      "optionA": "3",
+      "optionB": "4",
+      "optionC": "5",
+      "optionD": "6",
+      "correctAnswer": "B",
+      "marks": 1
+    }
+  ],
+  "createdAt": "2026-03-17T18:50:27.053Z",
+  "githubPath": "quizzes/my-quiz/quiz.json",
+  "attendeesPath": "quizzes/my-quiz/attendees.xlsx"
+}
