@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build && echo \"window.__ENV__ = { GITHUB_TOKEN: '$GITHUB_TOKEN', GITHUB_OWNER: '$GITHUB_OWNER', GITHUB_REPO: '$GITHUB_REPO' };\" > dist/quiz-app/browser/env-config.js"
+  publish = "dist/quiz-app/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
