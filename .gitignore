@@ -7,9 +7,9 @@ dist/
 .angular/
 
 # Environment files with real secrets — NEVER commit these
-# Copy environment.ts.example → environment.ts and fill in your values
-src/environments/environment.ts
-src/environments/environment.prod.ts
+# We now use env-config.js for local secrets and Netlify env vars for production
+src/env-config.js
+src/assets/env-config.js
 
 # OS
 .DS_Store
