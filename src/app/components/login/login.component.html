@@ -1,0 +1,51 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-icon">Q</div>
+      <h1>QuizForge</h1>
+      <p>Sign in to attend or manage quizzes</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="field">
+        <label for="name">Full Name</label>
+        <input
+          id="name"
+          type="text"
+          [(ngModel)]="name"
+          name="name"
+          placeholder="Jane Smith"
+          autocomplete="name"
+          [disabled]="loading"
+        />
+      </div>
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="jane@example.com"
+          autocomplete="email"
+          [disabled]="loading"
+        />
+        <span class="hint">Used as your unique identifier</span>
+      </div>
+
+      <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        <span *ngIf="!loading">Continue →</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+    </form>
+  </div>
+
+  <div class="bg-shapes">
+    <div class="shape s1"></div>
+    <div class="shape s2"></div>
+    <div class="shape s3"></div>
+  </div>
+</div>

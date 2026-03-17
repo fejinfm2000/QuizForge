@@ -1,0 +1,24 @@
+// Rename this file to environment.ts and fill in your real values.
+// DO NOT commit environment.ts — it is listed in .gitignore.
+export const environment = {
+  production: false,
+
+  github: {
+    // Personal Access Token — generate at https://github.com/settings/tokens
+    // Required scope: repo (read & write)
+    token: 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN',
+
+    // Your GitHub username
+    owner: 'YOUR_GITHUB_USERNAME',
+
+    // Name of the GitHub repository to store quiz data
+    // The repo must already exist. It can be private.
+    repo: 'YOUR_QUIZ_REPO_NAME',
+
+    // Branch name (usually 'main')
+    branch: 'main',
+
+    // Folder inside the repo where quizzes will be stored
+    basePath: 'quizzes'
+  }
+};

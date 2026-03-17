@@ -1,0 +1,188 @@
+<div class="dashboard">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">Q</div>
+      <span class="brand-name">QuizForge</span>
+    </div>
+    <div class="header-right" *ngIf="user$ | async as user">
+      <div class="user-pill">
+        <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-email">{{ user.email }}</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- GitHub Config Warning -->
+  <div class="config-warning" *ngIf="!githubConfigured">
+    <div class="warn-icon">⚠️</div>
+    <div>
+      <strong>GitHub not configured.</strong>
+      Open <code>src/environments/environment.ts</code> and set your
+      <code>token</code>, <code>owner</code>, and <code>repo</code>.
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="main" *ngIf="githubConfigured">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button [class.active]="activeTab === 'attend'" (click)="activeTab = 'attend'">
+        Attend a Quiz
+      </button>
+      <button [class.active]="activeTab === 'manage'" (click)="activeTab = 'manage'" *ngIf="isAdmin">
+        Manage Quizzes
+      </button>
+    </div>
+
+    <!-- ── ATTEND TAB ── -->
+    <section *ngIf="activeTab === 'attend'">
+      <div class="section-header">
+        <h2>Available Quizzes</h2>
+        <button class="btn-icon" (click)="loadQuizzes()" title="Refresh">↻</button>
+      </div>
+
+      <div class="loading-state" *ngIf="loading">
+        <div class="spinner-lg"></div>
+        <p>Loading quizzes from GitHub…</p>
+      </div>
+
+      <div class="alert alert-error" *ngIf="loadError" style="margin-bottom: 20px;">
+        ⚠ {{ loadError }}
+      </div>
+
+      <div class="empty-state" *ngIf="!loading && quizzes.length === 0">
+        <div class="empty-icon">📋</div>
+        <h3>No quizzes yet</h3>
+        <p>Switch to <strong>Manage Quizzes</strong> to upload the first one.</p>
+      </div>
+
+      <div class="quiz-grid" *ngIf="!loading && quizzes.length > 0">
+        <div class="quiz-card" *ngFor="let quiz of quizzes">
+          <div class="quiz-card-header">
+            <span class="quiz-badge">{{ quiz.questions.length }} Qs</span>
+          </div>
+          <h3>{{ quiz.title }}</h3>
+          <p class="quiz-desc" *ngIf="quiz.description">{{ quiz.description }}</p>
+          <div class="quiz-meta">
+            <span>📅 {{ quiz.createdAt | date:'mediumDate' }}</span>
+            <span>🏆 {{ quiz.questions | totalMarks }} marks</span>
+          </div>
+          <button class="btn-attend" (click)="attendQuiz(quiz)">Start Quiz →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MANAGE TAB ── -->
+    <section *ngIf="activeTab === 'manage'">
+
+      <!-- Upload Card -->
+      <div class="card upload-card">
+        <div class="card-header">
+          <h2>Upload New Quiz</h2>
+          <button class="btn-secondary" (click)="downloadTemplate()">
+            ⬇ Download Template
+          </button>
+        </div>
+
+        <div class="upload-form">
+          <div class="field-row">
+            <div class="field">
+              <label>Quiz Title *</label>
+              <input type="text" [(ngModel)]="quizTitle" placeholder="e.g. JavaScript Fundamentals" />
+              <small class="slug-preview" *ngIf="quizSlug">ID: {{ quizSlug }}</small>
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <input type="text" [(ngModel)]="quizDescription" placeholder="Optional description" />
+            </div>
+          </div>
+
+          <div class="file-drop" [class.has-file]="selectedFile">
+            <input type="file" id="fileInput" accept=".xlsx,.xls" (change)="onFileSelected($event)" />
+            <label for="fileInput">
+              <div *ngIf="!selectedFile">
+                <span class="drop-icon">📂</span>
+                <span>Click to choose Excel file</span>
+                <small>.xlsx or .xls</small>
+              </div>
+              <div *ngIf="selectedFile">
+                <span class="drop-icon">✅</span>
+                <span>{{ selectedFile.name }}</span>
+                <small>{{ (selectedFile.size / 1024).toFixed(1) }} KB</small>
+              </div>
+            </label>
+          </div>
+
+          <div class="alert alert-error" *ngIf="uploadError">⚠ {{ uploadError }}</div>
+          <div class="alert alert-success" *ngIf="uploadSuccess">✓ {{ uploadSuccess }}</div>
+
+          <button class="btn-primary" (click)="uploadQuiz()" [disabled]="uploading">
+            <span *ngIf="!uploading">Upload Quiz to GitHub</span>
+            <span *ngIf="uploading" class="btn-loading">
+              <span class="spinner-sm"></span> Uploading…
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quizzes List for Admin -->
+      <div class="card" style="margin-top:24px">
+        <div class="card-header">
+          <h2>All Quizzes</h2>
+          <button class="btn-icon" (click)="loadQuizzes()">↻ Refresh</button>
+        </div>
+
+        <div class="loading-state" *ngIf="loading">
+          <div class="spinner-lg"></div><p>Loading…</p>
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && quizzes.length === 0">
+          <div class="empty-icon">📋</div>
+          <h3>No quizzes uploaded yet.</h3>
+        </div>
+
+        <div class="table-wrap" *ngIf="!loading && quizzes.length > 0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Questions</th>
+                <th>Total Marks</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let quiz of quizzes">
+                <td><strong>{{ quiz.title }}</strong><br><small>{{ quiz.id }}</small></td>
+                <td>{{ quiz.questions.length }}</td>
+                <td>{{ quiz.questions | totalMarks }}</td>
+                <td>{{ quiz.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="btn-sm btn-attend" (click)="attendQuiz(quiz)">Preview</button>
+                    <button
+                      class="btn-sm btn-download"
+                      (click)="downloadAttendees(quiz)"
+                      [disabled]="downloadingId === quiz.id">
+                      {{ downloadingId === quiz.id ? '…' : '⬇ Attendees' }}
+                    </button>
+                    <button class="btn-sm btn-delete" (click)="deleteQuiz(quiz)">🗑 Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>

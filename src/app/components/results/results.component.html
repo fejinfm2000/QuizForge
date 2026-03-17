@@ -1,0 +1,141 @@
+<div class="results-wrapper" *ngIf="result">
+
+  <!-- Confetti / Banner -->
+  <div class="result-banner" [class.pass]="passed" [class.fail]="!passed">
+    <div class="banner-content">
+      <div class="result-emoji">{{ passed ? '🎉' : '😔' }}</div>
+      <h1>{{ passed ? 'Well Done!' : 'Better Luck Next Time' }}</h1>
+      <p>{{ result.quizTitle }}</p>
+    </div>
+  </div>
+
+  <!-- Score Card -->
+  <div class="results-body">
+
+    <div class="score-card">
+      <div class="score-circle" [class]="gradeClass">
+        <span class="grade-letter">{{ grade }}</span>
+        <span class="score-pct">{{ result.percentage.toFixed(1) }}%</span>
+      </div>
+
+      <div class="score-breakdown">
+        <div class="stat-row">
+          <div class="stat">
+            <span class="stat-value green">{{ result.correct }}</span>
+            <span class="stat-label">Correct</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value red">{{ result.wrong }}</span>
+            <span class="stat-label">Wrong</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value muted">{{ result.skipped }}</span>
+            <span class="stat-label">Skipped</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value accent">{{ result.marksEarned }} / {{ result.totalMarks }}</span>
+            <span class="stat-label">Marks</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="detail-card">
+      <h2>Attempt Details</h2>
+      <table class="detail-table">
+        <tr>
+          <td>Name</td>
+          <td><strong>{{ result.name }}</strong></td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>{{ result.email }}</td>
+        </tr>
+        <tr>
+          <td>Quiz</td>
+          <td>{{ result.quizTitle }}</td>
+        </tr>
+        <tr>
+          <td>Submitted At</td>
+          <td>{{ result.attemptedAt | date:'medium' }}</td>
+        </tr>
+        <tr>
+          <td>Total Questions</td>
+          <td>{{ result.totalQuestions }}</td>
+        </tr>
+        <tr>
+          <td>Attempted</td>
+          <td>{{ result.attempted }} ({{ result.skipped }} skipped)</td>
+        </tr>
+        <tr>
+          <td>Score</td>
+          <td>{{ result.marksEarned }} / {{ result.totalMarks }} marks</td>
+        </tr>
+        <tr>
+          <td>Percentage</td>
+          <td>{{ result.percentage.toFixed(2) }}%</td>
+        </tr>
+        <tr>
+          <td>Grade</td>
+          <td><span class="grade-chip" [class]="gradeClass">{{ grade }}</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Answer Review -->
+    <div class="answers-card" *ngIf="result.answers.length > 0">
+      <h2>Answer Review</h2>
+      <div class="answer-list">
+        <div
+          *ngFor="let ans of result.answers; let i = index"
+          class="answer-row"
+          [class.correct]="ans.isCorrect"
+          [class.wrong]="!ans.isCorrect && ans.selectedOption !== null"
+          [class.skipped]="ans.selectedOption === null"
+        >
+          <div class="ans-indicator">
+            <span *ngIf="ans.isCorrect">✓</span>
+            <span *ngIf="!ans.isCorrect && ans.selectedOption !== null">✗</span>
+            <span *ngIf="ans.selectedOption === null">–</span>
+          </div>
+          <div class="ans-info">
+            <span class="ans-label">Q{{ i + 1 }}</span>
+            <span class="ans-selected">
+              Your answer: <strong>{{ ans.selectedOption ?? 'Skipped' }}</strong>
+            </span>
+            <span class="ans-marks">+{{ ans.marksEarned }} marks</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button class="btn-secondary" (click)="downloadMyResult()">
+        ⬇ Download My Result
+      </button>
+      <button class="btn-primary" (click)="goToDashboard()">
+        Back to Dashboard →
+      </button>
+    </div>
+
+    <!-- History Section -->
+    <div class="history-card" *ngIf="history.length > 0">
+      <h2>Your Recent History</h2>
+      <div class="history-list">
+        <div class="history-item" *ngFor="let h of history">
+          <div class="history-info">
+            <strong>{{ h.quizTitle }}</strong>
+            <small>{{ h.attemptedAt | date:'medium' }}</small>
+          </div>
+          <div class="history-score">
+            <span class="history-pct">{{ h.percentage.toFixed(1) }}%</span>
+            <span class="grade-chip" [class]="getGradeClass(h.percentage)">{{ getGrade(h.percentage) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

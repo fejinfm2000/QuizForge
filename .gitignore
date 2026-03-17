@@ -1,0 +1,24 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Angular build output
+dist/
+.angular/
+
+# Environment files with real secrets — NEVER commit these
+# Copy environment.ts.example → environment.ts and fill in your values
+src/environments/environment.ts
+src/environments/environment.prod.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

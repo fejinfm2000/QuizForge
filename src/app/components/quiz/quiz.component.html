@@ -1,0 +1,110 @@
+<div class="quiz-wrapper">
+
+  <!-- Loading -->
+  <div class="center-state" *ngIf="loading">
+    <div class="spinner-lg"></div>
+    <p>Loading quiz…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="center-state" *ngIf="!loading && error">
+    <div class="err-icon">⚠️</div>
+    <h3>{{ error }}</h3>
+    <button class="btn-back" routerLink="/dashboard">← Back to Dashboard</button>
+  </div>
+
+  <!-- Quiz UI -->
+  <ng-container *ngIf="!loading && !error && quiz">
+
+    <!-- Top Bar -->
+    <div class="quiz-topbar">
+      <div class="quiz-title-area">
+        <span class="quiz-label">Quiz</span>
+        <h1>{{ quiz.title }}</h1>
+      </div>
+      <div class="quiz-meta-bar">
+        <div class="timer" [class.warning]="timerWarning">
+          <span class="timer-icon">⏱</span>
+          {{ timerDisplay }}
+        </div>
+        <div class="progress-chip">
+          {{ currentIndex + 1 }} / {{ quiz.questions.length }}
+        </div>
+        <button
+          class="btn-submit-top"
+          (click)="submitQuiz()"
+          [disabled]="submitting"
+        >
+          {{ submitting ? 'Submitting…' : 'Submit Quiz' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" [style.width.%]="progress"></div>
+    </div>
+
+    <!-- Body -->
+    <div class="quiz-body">
+
+      <!-- Question Panel -->
+      <div class="question-panel" *ngIf="currentQuestion">
+        <div class="q-number">Question {{ currentIndex + 1 }}</div>
+        <div class="q-marks-badge">{{ currentQuestion.marks }} {{ currentQuestion.marks === 1 ? 'mark' : 'marks' }}</div>
+
+        <p class="q-text">{{ currentQuestion.question }}</p>
+
+        <div class="options-grid">
+          <button
+            *ngFor="let opt of ['A','B','C','D']"
+            class="option-btn"
+            [class.selected]="getSelected() === opt"
+            (click)="selectOption($any(opt))"
+          >
+            <span class="opt-label">{{ opt }}</span>
+            <span class="opt-text">
+              {{ opt === 'A' ? currentQuestion.optionA :
+                 opt === 'B' ? currentQuestion.optionB :
+                 opt === 'C' ? currentQuestion.optionC :
+                               currentQuestion.optionD }}
+            </span>
+          </button>
+        </div>
+
+        <div class="nav-btns">
+          <button class="btn-nav" (click)="prev()" [disabled]="currentIndex === 0">← Prev</button>
+          <button class="btn-nav btn-nav-next" (click)="next()" [disabled]="currentIndex === quiz.questions.length - 1">Next →</button>
+        </div>
+      </div>
+
+      <!-- Question Map Sidebar -->
+      <div class="question-map">
+        <div class="map-header">Question Map</div>
+        <div class="map-grid">
+          <button
+            *ngFor="let q of quiz.questions; let i = index"
+            class="map-btn"
+            [class.active]="currentIndex === i"
+            [class.answered]="isAnswered(i)"
+            (click)="goTo(i)"
+          >{{ i + 1 }}</button>
+        </div>
+        <div class="map-legend">
+          <span class="legend-item"><span class="dot answered"></span> Answered ({{ answeredCount }})</span>
+          <span class="legend-item"><span class="dot unanswered"></span> Unanswered ({{ quiz.questions.length - answeredCount }})</span>
+        </div>
+
+        <button
+          class="btn-submit-sidebar"
+          (click)="submitQuiz()"
+          [disabled]="submitting"
+        >
+          <span *ngIf="!submitting">Submit Quiz ✓</span>
+          <span *ngIf="submitting">Submitting…</span>
+        </button>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
