@@ -1,0 +1,260 @@
+{
+  "id": "mongodb-second-crew",
+  "title": "MongoDB Second Crew",
+  "description": "MongoDB training session",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What type of database is MongoDB?",
+      "optionA": "Relational Database",
+      "optionB": "Document-oriented NoSQL Database",
+      "optionC": "Graph Database",
+      "optionD": "Key-Value Store",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 2,
+      "question": "What format does MongoDB use to store documents internally?",
+      "optionA": "XML",
+      "optionB": "CSV",
+      "optionC": "BSON (Binary JSON)",
+      "optionD": "Plain JSON",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 3,
+      "question": "In MongoDB, what is a Collection equivalent to in a relational database?",
+      "optionA": "A Row",
+      "optionB": "A Column",
+      "optionC": "A Table",
+      "optionD": "A Database",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 4,
+      "question": "Which method is used to insert a single document into a MongoDB collection?",
+      "optionA": "db.collection.insertAll()",
+      "optionB": "db.collection.insertOne()",
+      "optionC": "db.collection.addOne()",
+      "optionD": "db.collection.createOne()",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 5,
+      "question": "What does the '_id' field represent in a MongoDB document?",
+      "optionA": "A foreign key linking to another collection",
+      "optionB": "The document version number",
+      "optionC": "The unique primary key for the document",
+      "optionD": "An optional field for document ordering",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 6,
+      "question": "Which MongoDB CRUD method retrieves the first document that matches a filter?",
+      "optionA": "db.collection.find()",
+      "optionB": "db.collection.findOne()",
+      "optionC": "db.collection.getFirst()",
+      "optionD": "db.collection.fetchOne()",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 7,
+      "question": "Which update operator is used to increment a numeric field value in MongoDB?",
+      "optionA": "$add",
+      "optionB": "$plus",
+      "optionC": "$inc",
+      "optionD": "$set",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 8,
+      "question": "What does the $gt comparison operator do in a MongoDB query?",
+      "optionA": "Matches values greater than or equal to the specified value",
+      "optionB": "Matches values greater than the specified value",
+      "optionC": "Matches values less than the specified value",
+      "optionD": "Groups documents together",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 9,
+      "question": "Which aggregation stage is used to filter documents in a pipeline, similar to a WHERE clause?",
+      "optionA": "$group",
+      "optionB": "$project",
+      "optionC": "$match",
+      "optionD": "$filter",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 10,
+      "question": "What does the $group stage in an aggregation pipeline do?",
+      "optionA": "Filters documents based on a condition",
+      "optionB": "Sorts documents in a specific order",
+      "optionC": "Groups documents by a specified key and calculates aggregate values",
+      "optionD": "Joins two collections together",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 11,
+      "question": "What is the purpose of a Projection in a MongoDB find() query?",
+      "optionA": "To sort the result set",
+      "optionB": "To specify which fields to include or exclude from results",
+      "optionC": "To limit the number of documents returned",
+      "optionD": "To join with another collection",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 12,
+      "question": "Which MongoDB query operator checks if an array field contains ALL of the specified elements?",
+      "optionA": "$contains",
+      "optionB": "$in",
+      "optionC": "$all",
+      "optionD": "$elemMatch",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 13,
+      "question": "What is the primary trade-off when creating indexes in MongoDB?",
+      "optionA": "Indexes improve both read and write performance equally",
+      "optionB": "Indexes improve read speed but consume memory and slow down write operations",
+      "optionC": "Indexes only work on string fields",
+      "optionD": "Indexes reduce storage space but slow down reads",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 14,
+      "question": "Which of the following methods is used to paginate results in MongoDB?",
+      "optionA": "limit() and page()",
+      "optionB": "skip() and limit()",
+      "optionC": "offset() and fetch()",
+      "optionD": "start() and end()",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 15,
+      "question": "In MongoDB's aggregation framework, which stage is used to perform a LEFT OUTER JOIN with another collection?",
+      "optionA": "$join",
+      "optionB": "$merge",
+      "optionC": "$lookup",
+      "optionD": "$link",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 16,
+      "question": "In MongoDB, which command is used to switch to a database called \"school\"?",
+      "optionA": "switch school",
+      "optionB": "connect(\"school\")",
+      "optionC": "use school",
+      "optionD": "open school",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 17,
+      "question": "Which update operator removes a specific field from a MongoDB document?",
+      "optionA": "$remove",
+      "optionB": "$delete",
+      "optionC": "$unset",
+      "optionD": "$drop",
+      "correctAnswer": "C",
+      "marks": 2
+    },
+    {
+      "id": 18,
+      "question": "When using insertMany() in MongoDB, what happens by default if one document fails validation?",
+      "optionA": "MongoDB skips the error and inserts all other documents",
+      "optionB": "MongoDB stops inserting at the first error by default (ordered: true)",
+      "optionC": "MongoDB rolls back all previously inserted documents",
+      "optionD": "MongoDB retries the failed document up to 3 times",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 19,
+      "question": "Which MongoDB horizontal scaling mechanism distributes data across multiple servers?",
+      "optionA": "Replication",
+      "optionB": "Clustering",
+      "optionC": "Partitioning",
+      "optionD": "Sharding",
+      "correctAnswer": "D",
+      "marks": 2
+    },
+    {
+      "id": 20,
+      "question": "In an aggregation $group stage, which accumulator would you use to calculate the average of a numeric field?",
+      "optionA": "$mean",
+      "optionB": "$avg",
+      "optionC": "$sum",
+      "optionD": "$calc",
+      "correctAnswer": "B",
+      "marks": 2
+    },
+    {
+      "id": 21,
+      "question": "In a MongoDB aggregation $group stage, which operator calculates the total sum of a numeric field?",
+      "optionA": "$total",
+      "optionB": "$count",
+      "optionC": "$add",
+      "optionD": "$sum",
+      "correctAnswer": "D",
+      "marks": 1
+    },
+    {
+      "id": 22,
+      "question": "Which MongoDB query finds all documents where the \"age\" field equals 25?",
+      "optionA": "db.users.find({ age: { $eq: \"25\" } })",
+      "optionB": "db.users.find({ age: 25 })",
+      "optionC": "db.users.search({ age: 25 })",
+      "optionD": "db.users.filter({ age: 25 })",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 23,
+      "question": "What does the createIndex() method do in MongoDB?",
+      "optionA": "Creates a new collection",
+      "optionB": "Deletes duplicate documents",
+      "optionC": "Creates an index on a field to speed up queries",
+      "optionD": "Adds a new field to all documents",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 24,
+      "question": "Which MongoDB aggregation stage limits the number of documents passed to the next stage?",
+      "optionA": "$skip",
+      "optionB": "$limit",
+      "optionC": "$count",
+      "optionD": "$filter",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 25,
+      "question": "A developer stores unlimited user activity logs as an ever-growing array inside a single user document. Which problem will this pattern inevitably cause in MongoDB?",
+      "optionA": "Query operators like $in will stop working on the array",
+      "optionB": "The document will eventually exceed MongoDB's 16MB BSON document size limit",
+      "optionC": "MongoDB will automatically archive old array elements",
+      "optionD": "Indexes on array fields will be invalidated after 1000 elements",
+      "correctAnswer": "B",
+      "marks": 3
+    }
+  ],
+  "createdAt": "2026-04-10T03:23:27.549Z",
+  "githubPath": "quizzes/mongodb-second-crew/quiz.json",
+  "attendeesPath": "quizzes/mongodb-second-crew/attendees.xlsx"
+}
