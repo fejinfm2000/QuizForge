@@ -1,0 +1,259 @@
+{
+  "id": "flowable-enterprise",
+  "title": "Flowable Enterprise",
+  "questions": [
+    {
+      "id": 1,
+      "question": "How do you configure a User Task in Flowable Design to allow multiple specific users to claim it?",
+      "optionA": "Assign it to an expression resolving to a single user",
+      "optionB": "Add users to the \"Candidate users\" property",
+      "optionC": "Set the task to \"Parallel Multi-instance\"",
+      "optionD": "Use a Script Task to assign it",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 2,
+      "question": "When configuring an Exclusive Gateway, what is the best practice to handle a situation where no conditional sequence flows evaluate to true?",
+      "optionA": "Use an Event-based Gateway instead",
+      "optionB": "Configure a \"Default flow\" property",
+      "optionC": "Let the process throw an unhandled exception",
+      "optionD": "Add a Timer Boundary Event",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 3,
+      "question": "What is the primary difference between a Sub-process and a Call Activity in Flowable?",
+      "optionA": "A Sub-process is reusable across different Apps; a Call Activity is not.",
+      "optionB": "A Sub-process is embedded in the same diagram; a Call Activity calls an external, reusable process.",
+      "optionC": "They are identical in execution and design.",
+      "optionD": "Call Activities cannot contain User Tasks.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 4,
+      "question": "In a Multi-instance User Task configured sequentially, what happens when the first user completes their task?",
+      "optionA": "The entire process moves to the next node.",
+      "optionB": "The task is terminated.",
+      "optionC": "A new task is generated for the next item in the collection.",
+      "optionD": "All remaining users get parallel tasks.",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 5,
+      "question": "What is the function of a Compensation Boundary Event in a BPMN process?",
+      "optionA": "To pause the process until an employee is paid.",
+      "optionB": "To undo or compensate for a previously completed activity when an error or cancellation occurs.",
+      "optionC": "To automatically allocate budget to a financial system.",
+      "optionD": "To retry a failed Service Task infinitely.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 6,
+      "question": "How do you map a variable from a parent process to a child process invoked by a Call Activity?",
+      "optionA": "Variables map automatically by default.",
+      "optionB": "Configure the \"In parameters\" mapping on the Call Activity.",
+      "optionC": "Use a Message Event to send data.",
+      "optionD": "Use a Script Task to update the database directly.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 7,
+      "question": "How do you configure a Timer Event using ISO 8601 syntax to trigger repeatedly, such as every 3 days?",
+      "optionA": "Using the syntax `R/P3D`",
+      "optionB": "Using the syntax `REPEAT: 3 DAYS`",
+      "optionC": "Repeating timers are not supported in BPMN",
+      "optionD": "Using a `cron` expression like `* * 3 * *`",
+      "correctAnswer": "A",
+      "marks": 1
+    },
+    {
+      "id": 8,
+      "question": "What happens if a Non-interrupting Timer Boundary Event triggers on a User Task?",
+      "optionA": "The User Task is cancelled, and the process follows the timer flow.",
+      "optionB": "The User Task remains active, and a parallel path is spawned from the timer flow.",
+      "optionC": "An error is thrown.",
+      "optionD": "The process pauses completely.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 9,
+      "question": "In Flowable, what is required to trigger a specific Message Catch Event from an external system?",
+      "optionA": "Only the process instance ID.",
+      "optionB": "The Message Reference name and optionally a correlation key.",
+      "optionC": "The Task ID of the next User Task.",
+      "optionD": "An Error Code.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 10,
+      "question": "Which attribute must match for an Error End Event to be caught by an Error Boundary Event?",
+      "optionA": "The name of the events",
+      "optionB": "The Error Code",
+      "optionC": "The user assigned to the task",
+      "optionD": "The process version",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 11,
+      "question": "How can you prevent an asynchronous Service Task from blocking the main process thread in Flowable?",
+      "optionA": "Mark it as \"Exclusive\" = False",
+      "optionB": "Set \"Asynchronous\" to True on the Service Task properties",
+      "optionC": "Put it in a separate Sub-process",
+      "optionD": "Change it to a Script Task",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 12,
+      "question": "How are UI forms bound to a Start Event so users can input data when initiating a process?",
+      "optionA": "By writing custom HTML script inside the Start Event properties.",
+      "optionB": "By selecting a created form model in the \"Start form reference\" property.",
+      "optionC": "Start Events cannot have forms attached to them.",
+      "optionD": "By attaching a User Task immediately before the Start Event.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 13,
+      "question": "In an Inclusive Gateway split, what happens at the corresponding converging Inclusive Gateway?",
+      "optionA": "It waits for only the first token to arrive.",
+      "optionB": "It waits for all tokens that were generated by the split to arrive before continuing.",
+      "optionC": "It throws an error if more than one token arrives.",
+      "optionD": "It merges tokens without waiting.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 14,
+      "question": "In Flowable, what is the default history level setting for the process engine that dictates how much audit data is saved?",
+      "optionA": "None",
+      "optionB": "Activity",
+      "optionC": "Audit",
+      "optionD": "Full",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 15,
+      "question": "What is the effect of checking the \"Is executable\" property on a Process model?",
+      "optionA": "It allows the process to be deployed and instantiated in the runtime engine.",
+      "optionB": "It converts the process to executable Java code.",
+      "optionC": "It locks the model from further editing.",
+      "optionD": "It bypasses all User Tasks during testing.",
+      "correctAnswer": "A",
+      "marks": 1
+    },
+    {
+      "id": 16,
+      "question": "What does a small diagonal \"slash\" (/) across a sequence flow line exiting an Exclusive or Inclusive Gateway indicate?",
+      "optionA": "A broken connection that needs fixing.",
+      "optionB": "The default sequence flow to take if no other conditions are met.",
+      "optionC": "An asynchronous continuation boundary.",
+      "optionD": "A mandatory parallel path.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 17,
+      "question": "Which of the following is true about an Event Sub-process?",
+      "optionA": "It must be triggered by an external REST call.",
+      "optionB": "It can only be triggered by a Message Event.",
+      "optionC": "It is embedded within a process and triggered by an event (like Error or Timer) within that scope.",
+      "optionD": "It replaces standard Call Activities.",
+      "correctAnswer": "C",
+      "marks": 1
+    },
+    {
+      "id": 18,
+      "question": "How do you configure a Service Task to call a specific Java class delegated to handle the logic?",
+      "optionA": "Select \"Java class\" and provide the fully qualified class name in the \"Class\" property.",
+      "optionB": "Select \"Expression\" and write Java code inline.",
+      "optionC": "Use a Script Task instead.",
+      "optionD": "Configure a REST endpoint URL.",
+      "correctAnswer": "A",
+      "marks": 1
+    },
+    {
+      "id": 19,
+      "question": "In a Business Rule Task, how is the task typically linked to a DMN Decision Table in Flowable Design?",
+      "optionA": "By writing JUEL logic",
+      "optionB": "By referencing the Decision Table's Model Key in the \"Decision table reference\" property",
+      "optionC": "By embedding the DMN XML",
+      "optionD": "By using a Call Activity",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 20,
+      "question": "What is a \"Signal Event\" in BPMN used for compared to a \"Message Event\"?",
+      "optionA": "Signals are point-to-point (one-to-one), Messages are broadcast.",
+      "optionB": "Signals are broadcast to all active handlers, Messages are point-to-point to a specific handler.",
+      "optionC": "Signals are only for errors, Messages are for timers.",
+      "optionD": "There is no functional difference in Flowable.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 21,
+      "question": "When a User Task is assigned to a \"Candidate group\", how does a specific user begin working on it?",
+      "optionA": "It is automatically assigned based on alphabetical order.",
+      "optionB": "The user must first \"Claim\" the task.",
+      "optionC": "The engine runs a round-robin assignment.",
+      "optionD": "Any group member can complete it without claiming.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 22,
+      "question": "What does the \"Completion condition\" property do on a Multi-instance activity?",
+      "optionA": "It defines when the multi-instance execution should end early (e.g., when 50% are approved).",
+      "optionB": "It validates the form data before completion.",
+      "optionC": "It checks if the database is online.",
+      "optionD": "It sends an email when all tasks are done.",
+      "correctAnswer": "A",
+      "marks": 1
+    },
+    {
+      "id": 23,
+      "question": "How do you define a constant, default value for a process variable directly within the BPMN diagram?",
+      "optionA": "Use an Initialization Task.",
+      "optionB": "Define a Data Object or map it in the Start Event form.",
+      "optionC": "You can only do this via REST API.",
+      "optionD": "Use a Boundary Event.",
+      "correctAnswer": "B",
+      "marks": 1
+    },
+    {
+      "id": 24,
+      "question": "What is fundamentally required at the engine level to successfully execute a Mail Task in Flowable?",
+      "optionA": "A connected SMTP server configured in the Flowable engine properties.",
+      "optionB": "A custom Java delegate class deployed with the App.",
+      "optionC": "An active email client installed on the user's local machine.",
+      "optionD": "A REST API endpoint hosted on a third-party server.",
+      "correctAnswer": "A",
+      "marks": 1
+    },
+    {
+      "id": 25,
+      "question": "How can you map specific process variables to be explicitly passed out of a child process (Call Activity) back to the parent process?",
+      "optionA": "Variables are never passed back; they are destroyed when the child ends.",
+      "optionB": "Using the \"Out parameters\" mapping in the Call Activity properties.",
+      "optionC": "By using a database trigger to sync the tables.",
+      "optionD": "By catching a Message Event in the parent process.",
+      "correctAnswer": "B",
+      "marks": 1
+    }
+  ],
+  "createdAt": "2026-08-10T09:22:00.221Z",
+  "githubPath": "quizzes/flowable-enterprise/quiz.json",
+  "attendeesPath": "quizzes/flowable-enterprise/attendees.xlsx"
+}
