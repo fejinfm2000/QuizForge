@@ -1,5 +1,15 @@
 [
   {
+    "activityId": "act_en8v3hwv",
+    "timestamp": "2026-08-12T18:05:08.823Z",
+    "actorEmail": "fejinfm2000@gmail.com",
+    "actorRole": "admin",
+    "actionType": "INVIGILATOR_REMOVED",
+    "targetId": "fevin@gmail.com",
+    "targetType": "invigilator",
+    "description": "Removed invigilator fevin@gmail.com"
+  },
+  {
     "activityId": "act_2npfhz9i",
     "timestamp": "2026-08-12T18:05:03.918Z",
     "actorEmail": "fejinfm2000@gmail.com",
