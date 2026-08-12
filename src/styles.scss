@@ -15,6 +15,21 @@
   --text-muted:    #5c6480;
 }
 
+/* Light theme variables */
+[data-theme="light"] {
+  --accent:        #2563eb;
+  --accent-hover:  #1e40af;
+  --bg:            #f7fbff;
+  --surface:       #ffffff;
+  --surface-hover: #f1f5f9;
+  --border:        #e6eef9;
+  --input-bg:      #ffffff;
+  --code-bg:       #f4f7fb;
+  --text-primary:  #0b1220;
+  --text-secondary:#475569;
+  --text-muted:    #6b7280;
+}
+
 // ── Reset ─────────────────────────────────────────────────────────────────────
 *, *::before, *::after { box-sizing: border-box; }
 

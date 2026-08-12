@@ -91,18 +91,18 @@
           *ngFor="let ans of result.answers; let i = index"
           class="answer-row"
           [class.correct]="ans.isCorrect"
-          [class.wrong]="!ans.isCorrect && ans.selectedOption !== null"
-          [class.skipped]="ans.selectedOption === null"
+          [class.wrong]="!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim() ? 1 : 0) > 0"
+          [class.skipped]="!(ans.selectedOptionIds?.length || ans.textAnswer?.trim())"
         >
           <div class="ans-indicator">
             <span *ngIf="ans.isCorrect">✓</span>
-            <span *ngIf="!ans.isCorrect && ans.selectedOption !== null">✗</span>
-            <span *ngIf="ans.selectedOption === null">–</span>
+            <span *ngIf="!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim())">✗</span>
+            <span *ngIf="!(ans.selectedOptionIds?.length || ans.textAnswer?.trim())">–</span>
           </div>
           <div class="ans-info">
             <span class="ans-label">Q{{ i + 1 }}</span>
             <span class="ans-selected">
-              Your answer: <strong>{{ ans.selectedOption ?? 'Skipped' }}</strong>
+              Your answer: <strong>{{ ans.textAnswer || ans.selectedOptionIds?.join(', ') || 'Skipped' }}</strong>
             </span>
             <span class="ans-marks">+{{ ans.marksEarned }} marks</span>
           </div>

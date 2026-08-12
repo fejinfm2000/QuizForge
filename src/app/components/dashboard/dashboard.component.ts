@@ -8,11 +8,17 @@ import { ExcelService } from '../../services/excel.service';
 import { Quiz, QuizQuestion } from '../../models/quiz.models';
 import { TotalMarksPipe } from '../../pipes/total-marks.pipe';
 import { environment } from '../../../environments/environment';
+import { InvigilatorService } from '../../services/invigilator.service';
+import { ActivityService } from '../../services/activity.service';
+import { ConfirmService } from '../../services/confirm.service';
+import { ThemeService } from '../../services/theme.service';
+import { StatsService } from '../../services/stats.service';
+import { ActivitiesComponent } from '../activities/activities.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TotalMarksPipe],
+  imports: [CommonModule, FormsModule, TotalMarksPipe, ActivitiesComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -24,6 +30,12 @@ export class DashboardComponent implements OnInit {
   uploading = false;
   downloadingId: string | null = null;
 
+  // Admin actions
+  invigilatorsList: string[] = [];
+  newInvEmail = '';
+  activities: any[] = [];
+  statsData: Record<string, number> = {};
+
   // Upload state
   quizTitle = '';
   quizDescription = '';
@@ -33,22 +45,104 @@ export class DashboardComponent implements OnInit {
   loadError = '';
 
   // Tab
-  activeTab: 'attend' | 'manage' = 'attend';
+  activeTab: 'attend' | 'manage' | 'admin' = 'attend';
+  // Invigilator test mode toggle
+  isTestMode = false;
 
   // GitHub config check
   githubConfigured = !!(environment.github.token && environment.github.owner && environment.github.repo
     && environment.github.token !== 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN');
+
+  currentTheme: 'light' | 'dark' = 'light';
 
   constructor(
     private auth: AuthService,
     private quizService: QuizService,
     private excel: ExcelService,
     private router: Router
+    , private invigilatorService: InvigilatorService
+    , private activityService: ActivityService
+    , private confirm: ConfirmService
+    , public theme: ThemeService
+    , private stats: StatsService
   ) {}
 
   async ngOnInit(): Promise<void> {
     if (this.githubConfigured) {
       await this.loadQuizzes();
+      // load invigilators and activities if admin
+      if (this.isAdmin) {
+        this.loadInvigilators();
+        this.loadActivities();
+        this.loadStats();
+        // subscribe to live updates
+        this.activityService.activities$.subscribe(a => this.activities = a.slice(0, 50));
+        this.stats.stats$.subscribe(s => this.statsData = s);
+      }
+    }
+    // apply saved theme and subscribe to changes
+    try {
+      this.theme.setTheme(this.theme.getTheme());
+      this.currentTheme = this.theme.getTheme();
+      this.theme.theme$.subscribe(t => { this.currentTheme = t; });
+    } catch {}
+  }
+
+  saveProfile(name: string): void {
+    if (!name || !name.trim()) return alert('Enter a name');
+    this.auth.updateProfile(name);
+    alert('Profile updated');
+  }
+
+  openProfile(): void {
+    this.router.navigate(['/profile']);
+  }
+
+  async loadInvigilators(): Promise<void> {
+    try {
+      this.invigilatorsList = await this.invigilatorService.list();
+    } catch (e) {
+      this.invigilatorsList = [];
+    }
+  }
+
+  async addInvigilator(): Promise<void> {
+    const email = this.newInvEmail.trim().toLowerCase();
+    if (!email) return alert('Enter an email');
+    try {
+      await this.invigilatorService.add(email);
+      await this.activityService.log({ actorEmail: this.auth.currentUser?.email, actorRole: 'admin', actionType: 'INVIGILATOR_ADDED', description: `Added invigilator ${email}`, targetId: email, targetType: 'invigilator' });
+      this.newInvEmail = '';
+      await this.loadInvigilators();
+    } catch (e: any) {
+      alert('Failed to add invigilator: ' + (e?.message ?? e));
+    }
+  }
+
+  async removeInvigilator(email: string): Promise<void> {
+    if (!(await this.confirm.confirm(`Remove invigilator ${email}?`))) return;
+    try {
+      await this.invigilatorService.remove(email);
+      await this.activityService.log({ actorEmail: this.auth.currentUser?.email, actorRole: 'admin', actionType: 'INVIGILATOR_REMOVED', description: `Removed invigilator ${email}`, targetId: email, targetType: 'invigilator' });
+      await this.loadInvigilators();
+    } catch (e: any) {
+      alert('Failed to remove invigilator: ' + (e?.message ?? e));
+    }
+  }
+
+  async loadActivities(): Promise<void> {
+    try {
+      this.activities = await this.activityService.getAll();
+    } catch {
+      this.activities = [];
+    }
+  }
+
+  async loadStats(): Promise<void> {
+    try {
+      this.statsData = await this.stats.get();
+    } catch {
+      this.statsData = {};
     }
   }
 
@@ -93,7 +187,7 @@ export class DashboardComponent implements OnInit {
     try {
       const questions: QuizQuestion[] = await this.excel.parseQuizExcel(this.selectedFile);
       const id = this.quizService.slugify(this.quizTitle);
-      const totalMarks = questions.reduce((s, q) => s + q.marks, 0);
+      const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
 
       const quiz: Quiz = {
         id,
@@ -121,7 +215,7 @@ export class DashboardComponent implements OnInit {
   }
 
   attendQuiz(quiz: Quiz): void {
-    this.router.navigate(['/quiz', quiz.id]);
+    this.router.navigate(['/quiz', quiz.id], { queryParams: { test: this.isTestMode } });
   }
 
   async downloadAttendees(quiz: Quiz): Promise<void> {
@@ -134,6 +228,14 @@ export class DashboardComponent implements OnInit {
       }
       const bytes = this.excel.generateAttendeesExcel(attendees);
       this.excel.downloadBytes(bytes, `${quiz.id}-attendees.xlsx`);
+      // increment attendance download counter and log activity
+      try {
+        await this.stats.increment('attendance_downloads');
+      } catch {}
+      try {
+        await this.activityService.log({ actorEmail: this.auth.currentUser?.email, actorRole: this.auth.currentUser?.role, actionType: 'ATTENDANCE_DOWNLOADED', targetId: quiz.id, targetType: 'quiz', description: `Attendance downloaded for ${quiz.id}` });
+      } catch {}
+      try { await this.loadStats(); } catch {}
     } catch (e: any) {
       alert('Failed to download attendees: ' + (e?.message ?? e));
     } finally {
@@ -142,7 +244,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async deleteQuiz(quiz: Quiz): Promise<void> {
-    if (!confirm(`Are you sure you want to delete "${quiz.title}"? This cannot be undone.`)) {
+    if (!(await this.confirm.confirm(`Are you sure you want to delete "${quiz.title}"? This cannot be undone.`))) {
       return;
     }
     
@@ -162,7 +264,11 @@ export class DashboardComponent implements OnInit {
   }
 
   get isAdmin(): boolean {
-    return this.auth.currentUser?.isAdmin ?? false;
+    return this.auth.isAdmin;
+  }
+
+  get isInvigilator(): boolean {
+    return this.auth.isInvigilator;
   }
 
   get quizSlug(): string {

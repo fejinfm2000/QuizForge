@@ -52,11 +52,27 @@
   gap: 16px;
 }
 
+.btn-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+}
+
 .user-pill {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
+.user-pill { cursor: pointer; }
 
 .avatar {
   width: 34px;
@@ -205,6 +221,8 @@
   }
 }
 
+.btn-icon[title="Profile"], .btn-icon[aria-label="Profile"] { padding: 8px 12px }
+
 // ── States ────────────────────────────────────────────────────────────────────
 .loading-state, .empty-state {
   text-align: center;
@@ -325,6 +343,40 @@
     margin: 0;
   }
 }
+
+/* Make inputs inside card-body match upload form inputs */
+.card-body .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-body .field input,
+.card-body .field .profile-value {
+  padding: 11px 13px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.profile-value { padding-top: 8px; padding-bottom: 8px; }
+
+/* Invigilator form input (admin actions) should match upload form */
+.invigilator-form input[type="email"] {
+  padding: 11px 13px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.invigilator-form { display: flex; align-items: center; gap: 8px; }
+.invigilator-list { margin-top: 12px; list-style: none; padding: 0; }
+.invigilator-list li { padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center }
 
 // ── Upload Form ────────────────────────────────────────────────────────────────
 .upload-form {

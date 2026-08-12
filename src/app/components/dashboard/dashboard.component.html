@@ -7,14 +7,18 @@
       <span class="brand-name">QuizForge</span>
     </div>
     <div class="header-right" *ngIf="user$ | async as user">
-      <div class="user-pill">
-        <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+      <div class="user-pill" (click)="openProfile()" title="View profile">
+        <div class="avatar">{{ (user.name || user.email).charAt(0).toUpperCase() }}</div>
         <div class="user-info">
-          <span class="user-name">{{ user.name }}</span>
+          <span class="user-name">{{ user.name || user.email }}</span>
           <span class="user-email">{{ user.email }}</span>
         </div>
       </div>
-      <button class="btn-logout" (click)="logout()">Sign out</button>
+      <div class="header-tools">
+        <button class="btn-theme" (click)="theme.toggle()">{{ currentTheme === 'dark' ? '🌙' : '🌞' }}</button>
+        <button class="btn-icon" (click)="openProfile()">Profile</button>
+        <button class="btn-logout" (click)="logout()">Sign out</button>
+      </div>
     </div>
   </header>
 
@@ -36,8 +40,11 @@
       <button [class.active]="activeTab === 'attend'" (click)="activeTab = 'attend'">
         Attend a Quiz
       </button>
-      <button [class.active]="activeTab === 'manage'" (click)="activeTab = 'manage'" *ngIf="isAdmin">
+      <button [class.active]="activeTab === 'manage'" (click)="activeTab = 'manage'" *ngIf="isAdmin || isInvigilator">
         Manage Quizzes
+      </button>
+      <button [class.active]="activeTab === 'admin'" (click)="activeTab = 'admin'" *ngIf="isAdmin">
+        Admin Actions
       </button>
     </div>
 
@@ -45,7 +52,6 @@
     <section *ngIf="activeTab === 'attend'">
       <div class="section-header">
         <h2>Available Quizzes</h2>
-        <button class="btn-icon" (click)="loadQuizzes()" title="Refresh">↻</button>
       </div>
 
       <div class="loading-state" *ngIf="loading">
@@ -83,7 +89,7 @@
     <section *ngIf="activeTab === 'manage'">
 
       <!-- Upload Card -->
-      <div class="card upload-card">
+      <div class="card upload-card" *ngIf="isAdmin || isInvigilator">
         <div class="card-header">
           <h2>Upload New Quiz</h2>
           <button class="btn-secondary" (click)="downloadTemplate()">
@@ -174,7 +180,7 @@
                       [disabled]="downloadingId === quiz.id">
                       {{ downloadingId === quiz.id ? '…' : '⬇ Attendees' }}
                     </button>
-                    <button class="btn-sm btn-delete" (click)="deleteQuiz(quiz)">🗑 Delete</button>
+                    <button class="btn-sm btn-delete" *ngIf="isAdmin || isInvigilator" (click)="deleteQuiz(quiz)">🗑 Delete</button>
                   </div>
                 </td>
               </tr>
@@ -183,6 +189,36 @@
         </div>
       </div>
 
+      <!-- admin actions moved to its own tab -->
     </section>
+
+    <!-- profile is now a dedicated route at /profile -->
+
+    <!-- ── ADMIN ACTIONS TAB ── -->
+    <section *ngIf="activeTab === 'admin' && isAdmin">
+      <div class="card">
+        <div class="card-header"><h2>Admin Actions</h2></div>
+        <div class="card-body">
+          <h3>Invigilators</h3>
+          <div class="invigilator-form">
+            <input type="email" [(ngModel)]="newInvEmail" placeholder="Invigilator email" />
+            <button class="btn-sm" (click)="addInvigilator()">Add Invigilator</button>
+          </div>
+          <ul class="invigilator-list">
+            <li *ngFor="let i of invigilatorsList">
+              {{ i }} <button class="btn-sm btn-delete" (click)="removeInvigilator(i)">Remove</button>
+            </li>
+          </ul>
+
+          <h3 style="margin-top:16px">Activities</h3>
+          <app-activities></app-activities>
+          <div style="margin-top:12px">
+            <strong>Attendance downloads:</strong>
+            <span>{{ statsData['attendance_downloads'] || 0 }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>

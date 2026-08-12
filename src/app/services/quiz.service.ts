@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { GithubService } from './github.service';
 import { ExcelService } from './excel.service';
+import { ActivityService } from './activity.service';
 import { environment } from '../../environments/environment';
 import { Quiz, AttendeeResult } from '../models/quiz.models';
 
@@ -15,6 +16,7 @@ export class QuizService {
   constructor(
     private github: GithubService,
     private excel: ExcelService
+    , private activity: ActivityService
   ) {}
 
   // ── Quiz Listing ───────────────────────────────────────────────────────────
@@ -29,7 +31,8 @@ export class QuizService {
       const file = await this.github.getFile(metaPath);
       if (file) {
         try {
-          const quiz: Quiz = JSON.parse(this.github.decodeBase64(file.content));
+          const raw = JSON.parse(this.github.decodeBase64(file.content));
+          const quiz: Quiz = this.migrateLegacyQuiz(raw);
           quizzes.push(quiz);
         } catch { /* skip malformed */ }
       }
@@ -41,7 +44,8 @@ export class QuizService {
     const metaPath = `${this.BASE}/${quizId}/quiz.json`;
     const file = await this.github.getFile(metaPath);
     if (!file) return null;
-    return JSON.parse(this.github.decodeBase64(file.content));
+    const raw = JSON.parse(this.github.decodeBase64(file.content));
+    return this.migrateLegacyQuiz(raw);
   }
 
   // ── Upload Quiz ────────────────────────────────────────────────────────────
@@ -49,6 +53,12 @@ export class QuizService {
   async uploadQuiz(quiz: Quiz): Promise<void> {
     const metaPath = `${this.BASE}/${quiz.id}/quiz.json`;
     const existing = await this.github.getFile(metaPath);
+
+    // Ensure minimal metadata
+    const now = new Date().toISOString();
+    quiz.createdAt = quiz.createdAt || now;
+    quiz.updatedAt = now;
+    if (!quiz.code) quiz.code = this.generateQuizCode();
 
     await this.github.putFile(
       metaPath,
@@ -73,6 +83,50 @@ export class QuizService {
     await this.loadQuizzes();
   }
 
+  // ── Migration helpers ─────────────────────────────────────────────────────
+
+  migrateLegacyQuiz(raw: any): Quiz {
+    // Detect an older format with optionA/optionB etc.
+    if (!raw) return raw;
+    if (raw.questions && raw.questions.length && raw.questions[0].optionA !== undefined) {
+      const questions = raw.questions.map((q: any, idx: number) => ({
+        questionId: (q.id ?? idx).toString(),
+        questionText: q.question || q.questionText || '',
+        questionType: 'single_choice' as const,
+        options: [
+          { id: 'A', text: q.optionA || '' },
+          { id: 'B', text: q.optionB || '' },
+          { id: 'C', text: q.optionC || '' },
+          { id: 'D', text: q.optionD || '' }
+        ],
+        correctAnswers: [q.correctAnswer],
+        marks: q.marks || 1
+      }));
+
+      return {
+        id: raw.id || raw.title && this.slugify(raw.title) || 'unknown',
+        title: raw.title || '',
+        description: raw.description,
+        code: raw.code,
+        invigilatorId: raw.invigilatorId || null,
+        questions,
+        createdAt: raw.createdAt || new Date().toISOString(),
+        updatedAt: raw.updatedAt || new Date().toISOString(),
+        githubPath: raw.githubPath
+      } as Quiz;
+    }
+
+    // Assume already in new shape
+    return raw as Quiz;
+  }
+
+  generateQuizCode(len = 6): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  }
+
   // ── Attendees ──────────────────────────────────────────────────────────────
 
   async getAttendees(quizId: string): Promise<AttendeeResult[]> {
@@ -94,8 +148,17 @@ export class QuizService {
       attendees = this.excel.parseAttendeesExcel(bytes);
     }
 
-    // Remove any previous attempt by same email for this quiz (keep latest)
-    attendees = attendees.filter(a => a.email !== result.email);
+    // If this is a test-mode attempt, do not persist (per spec)
+    if (result.isTestMode) {
+      return;
+    }
+
+    // Enforce single submission per candidate per quiz
+    const existing = attendees.find(a => a.email === result.email);
+    if (existing) {
+      throw new Error('User has already submitted this quiz and multiple submissions are not allowed');
+    }
+
     attendees.push(result);
 
     const updatedBytes = this.excel.generateAttendeesExcel(attendees);
@@ -105,6 +168,20 @@ export class QuizService {
       `Update attendees for quiz: ${result.quizId} — ${result.email}`,
       file?.sha
     );
+
+    // Log activity
+    try {
+      await this.activity.log({
+        actorEmail: result.email,
+        actorRole: 'candidate',
+        actionType: 'QUIZ_ATTEMPTED',
+        targetId: result.quizId,
+        targetType: 'quiz',
+        description: `${result.email} attempted quiz ${result.quizId}`
+      });
+    } catch {
+      // Ignore activity logging failures
+    }
   }
 
   async deleteQuiz(quizId: string): Promise<void> {
@@ -122,6 +199,29 @@ export class QuizService {
     }
 
     // Refresh list
+    await this.loadQuizzes();
+  }
+
+  /**
+   * Migrate existing quizzes and rewrite metadata using `migrateLegacyQuiz`.
+   * This will read every quiz.json and re-save the migrated shape back to GitHub.
+   */
+  async migrateAndRewriteAllQuizzes(): Promise<void> {
+    const dirs = await this.github.listDir(this.BASE);
+    const quizDirs = dirs.filter(d => d.type === 'dir');
+    for (const dir of quizDirs) {
+      const metaPath = `${dir.path}/quiz.json`;
+      const file = await this.github.getFile(metaPath);
+      if (!file) continue;
+      try {
+        const raw = JSON.parse(this.github.decodeBase64(file.content));
+        const migrated = this.migrateLegacyQuiz(raw);
+        await this.github.putFile(metaPath, this.github.encodeBase64(JSON.stringify(migrated, null, 2)), `Migrate quiz: ${migrated.id}`, file.sha);
+      } catch {
+        // skip malformed
+      }
+    }
+    // refresh local list
     await this.loadQuizzes();
   }
 
