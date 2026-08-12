@@ -1,0 +1,12 @@
+[
+  {
+    "activityId": "act_gvjf3z2o",
+    "timestamp": "2026-08-12T16:44:28.225Z",
+    "actorEmail": "fejinfm2000@gmail.com",
+    "actorRole": "admin",
+    "actionType": "INVIGILATOR_ADDED",
+    "targetId": "fevin@gmail.com",
+    "targetType": "invigilator",
+    "description": "Added invigilator fevin@gmail.com"
+  }
+]
