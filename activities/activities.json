@@ -1,5 +1,15 @@
 [
   {
+    "activityId": "act_vep6bdwv",
+    "timestamp": "2026-08-12T18:05:21.434Z",
+    "actorEmail": "fejinfm2000@gmail.com",
+    "actorRole": "admin",
+    "actionType": "INVIGILATOR_ADDED",
+    "targetId": "fevin@gmail.com",
+    "targetType": "invigilator",
+    "description": "Added invigilator fevin@gmail.com"
+  },
+  {
     "activityId": "act_en8v3hwv",
     "timestamp": "2026-08-12T18:05:08.823Z",
     "actorEmail": "fejinfm2000@gmail.com",
