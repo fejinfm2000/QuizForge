@@ -610,8 +610,236 @@
   color: var(--text-muted);
   font-family: monospace;
 }
+.header-tools{
+  display: flex;
+  gap: 12px;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+// ── Code Entry & Filter Additions ────────────────────────────────────────────
+.code-entry-card {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.code-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.code-input-group {
+  display: flex;
+  gap: 12px;
+
+  .code-input {
+    flex: 1;
+    padding: 12px 18px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text-primary);
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+  }
+
+  .btn-code {
+    padding: 0 24px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+}
+
+.quiz-preview-box {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--surface-hover);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  animation: fadeIn 0.3s ease;
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    .quiz-badge {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .marks-badge {
+      color: #eab308;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
+  .preview-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .preview-desc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .preview-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+
+    strong { color: var(--text-primary); }
+  }
+
+  .btn-lg {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+}
+
+.flex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-toggle {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+
+  button {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.active {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}
+
+.code-pill {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.owner-tag {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.badge-orphan {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-relink {
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+
+  &:hover { background: #a855f7; color: #fff; }
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+
+    h3 { margin: 0; font-size: 18px; color: var(--text-primary); }
+    .btn-close {
+      border: none; background: transparent; font-size: 18px; color: var(--text-muted); cursor: pointer;
+    }
+  }
+
+  .modal-body {
+    padding: 24px;
+    p { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-hover);
+  }
+}
+

@@ -17,6 +17,8 @@ export class QuizComponent implements OnInit {
   loading = true;
   error = '';
   isTestMode = false;
+  alreadyAttempted = false;
+  previousAttempt: AttendeeResult | null = null;
 
   // Quiz state
   currentIndex = 0;
@@ -44,11 +46,35 @@ export class QuizComponent implements OnInit {
       } else {
         // Init answers map for each question
         this.quiz.questions.forEach(q => this.answers.set(q.questionId, {}));
+        
+        // Check if user has already attempted this quiz
+        this.checkPreviousAttempt(id);
       }
     } catch (e: any) {
       this.error = e?.message ?? 'Failed to load quiz.';
     } finally {
       this.loading = false;
+    }
+  }
+
+  private checkPreviousAttempt(quizId: string): void {
+    try {
+      const historyRaw = localStorage.getItem('quiz_history');
+      if (!historyRaw) return;
+
+      const history: AttendeeResult[] = JSON.parse(historyRaw);
+      const currentUserEmail = this.auth.currentUser?.email;
+      
+      const previousAttempt = history.find(
+        h => h.quizId === quizId && h.email === currentUserEmail && !h.isTestMode
+      );
+
+      if (previousAttempt) {
+        this.alreadyAttempted = true;
+        this.previousAttempt = previousAttempt;
+      }
+    } catch (error) {
+      console.error('Failed to check previous attempts:', error);
     }
   }
 

@@ -85,27 +85,74 @@
 
     <!-- Answer Review -->
     <div class="answers-card" *ngIf="result.answers.length > 0">
-      <h2>Answer Review</h2>
+      <h2>Itemized Answer Review</h2>
       <div class="answer-list">
         <div
           *ngFor="let ans of result.answers; let i = index"
-          class="answer-row"
+          class="answer-review-item"
           [class.correct]="ans.isCorrect"
           [class.wrong]="!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim() ? 1 : 0) > 0"
           [class.skipped]="!(ans.selectedOptionIds?.length || ans.textAnswer?.trim())"
         >
-          <div class="ans-indicator">
-            <span *ngIf="ans.isCorrect">✓</span>
-            <span *ngIf="!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim())">✗</span>
-            <span *ngIf="!(ans.selectedOptionIds?.length || ans.textAnswer?.trim())">–</span>
+          <!-- Question Header -->
+          <div class="review-header">
+            <div class="question-badge">
+              <span class="q-indicator" [class]="ans.isCorrect ? 'correct' : (!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim()) ? 'wrong' : 'skipped')">
+                {{ ans.isCorrect ? '✓ Correct' : (!ans.isCorrect && (ans.selectedOptionIds?.length || ans.textAnswer?.trim()) ? '✗ Wrong' : '– Skipped') }}
+              </span>
+              <span class="q-number">Question {{ i + 1 }}</span>
+            </div>
+            <div class="marks-display">
+              <span class="mark-badge">{{ ans.marksEarned }} mark{{ ans.marksEarned !== 1 ? 's' : '' }}</span>
+            </div>
           </div>
-          <div class="ans-info">
-            <span class="ans-label">Q{{ i + 1 }}</span>
-            <span class="ans-selected">
-              Your answer: <strong>{{ ans.textAnswer || ans.selectedOptionIds?.join(', ') || 'Skipped' }}</strong>
-            </span>
-            <span class="ans-marks">+{{ ans.marksEarned }} marks</span>
-          </div>
+
+          <!-- Question Text & Options Breakdown -->
+          <ng-container *ngIf="quiz">
+            <div *ngFor="let q of quiz.questions">
+              <ng-container *ngIf="q.questionId === ans.questionId">
+                <p class="question-text"><strong>{{ q.questionText }}</strong></p>
+
+                <!-- Choice Questions Breakdown -->
+                <div class="options-review-grid" *ngIf="q.questionType === 'single_choice' || q.questionType === 'multi_choice'">
+                  <div
+                    *ngFor="let opt of q.options"
+                    class="option-review-pill"
+                    [class.correct-selected]="getOptionState(q.questionId, opt.id) === 'correct-selected'"
+                    [class.wrong-selected]="getOptionState(q.questionId, opt.id) === 'wrong-selected'"
+                    [class.correct-unselected]="getOptionState(q.questionId, opt.id) === 'correct-unselected'"
+                    [class.normal]="getOptionState(q.questionId, opt.id) === 'normal'"
+                  >
+                    <span class="opt-id">{{ opt.id }}</span>
+                    <span class="opt-text">{{ opt.text }}</span>
+
+                    <span class="state-badge" *ngIf="getOptionState(q.questionId, opt.id) === 'correct-selected'">✓ Your Selection (Correct)</span>
+                    <span class="state-badge" *ngIf="getOptionState(q.questionId, opt.id) === 'wrong-selected'">✗ Your Selection (Wrong)</span>
+                    <span class="state-badge" *ngIf="getOptionState(q.questionId, opt.id) === 'correct-unselected'">🟢 Correct Answer</span>
+                  </div>
+                </div>
+
+                <!-- Input Box Breakdown -->
+                <div class="input-review-box" *ngIf="q.questionType === 'input_box'">
+                  <div class="input-row">
+                    <span class="input-label">Your Submitted Answer:</span>
+                    <span class="input-val" [class.match]="ans.isCorrect" [class.mismatch]="!ans.isCorrect && ans.textAnswer?.trim()">
+                      {{ ans.textAnswer || '(No answer provided)' }}
+                    </span>
+                    <span class="badge-status" [class.match]="ans.isCorrect" [class.mismatch]="!ans.isCorrect && ans.textAnswer?.trim()">
+                      {{ ans.isCorrect ? '✓ Match' : (ans.textAnswer?.trim() ? '✗ Mismatch' : 'Skipped') }}
+                    </span>
+                  </div>
+                  <div class="input-row" *ngIf="!ans.isCorrect">
+                    <span class="input-label">Expected Answer:</span>
+                    <span class="input-val expected">{{ q.correctAnswerText || 'N/A' }}</span>
+                  </div>
+                </div>
+
+              </ng-container>
+            </div>
+          </ng-container>
+
         </div>
       </div>
     </div>

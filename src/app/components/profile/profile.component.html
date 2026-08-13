@@ -1,0 +1,433 @@
+<div class="profile-container">
+  <!-- Header Section -->
+  <div class="profile-header">
+    <button class="back-button" (click)="back()" title="Go back to dashboard">
+      <span>←</span>
+    </button>
+
+    <div class="header-content">
+      <div class="profile-banner">
+        <div class="banner-blur"></div>
+        <div class="profile-info">
+          <div class="avatar-section">
+            <div class="avatar-large" [ngClass]="'role-' + ((user$ | async)?.role || 'candidate')">
+              {{ avatarLetter() }}
+            </div>
+            <div class="online-indicator"></div>
+          </div>
+
+          <div class="user-details">
+            <ng-container *ngIf="!editing">
+              <h1 class="user-name">{{ (user$ | async)?.name || 'User' }}</h1>
+              <p class="user-email">{{ (user$ | async)?.email }}</p>
+            </ng-container>
+            <ng-container *ngIf="editing">
+              <input type="text" class="edit-input" [(ngModel)]="editedName" placeholder="Enter your name" />
+              <p class="user-email">{{ (user$ | async)?.email }}</p>
+            </ng-container>
+
+            <div class="user-meta">
+              <span class="role-badge" [ngClass]="'role-' + ((user$ | async)?.role || 'candidate')">
+                {{ (user$ | async)?.role | uppercase }}
+              </span>
+              <span class="session-badge" [ngClass]="{ active: sessionActive() }">
+                <span class="status-dot"></span>
+                {{ sessionActive() ? 'Active Session' : 'Offline' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="action-btn btn-secondary" *ngIf="!editing" (click)="startEdit()">
+            <span>✏️</span> Edit Profile
+          </button>
+          <button class="action-btn btn-primary" *ngIf="editing" (click)="save()">
+            <span>✓</span> Save
+          </button>
+          <button class="action-btn btn-secondary" *ngIf="editing" (click)="cancel()">
+            <span>✕</span> Cancel
+          </button>
+          <button class="action-btn btn-logout" (click)="logout()">
+            <span>🚪</span> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="profile-main">
+    <!-- Account Information Section -->
+    <section class="profile-section account-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">👤</span>
+          Account Information
+        </h2>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-label">Email Address</div>
+          <div class="info-value">{{ (user$ | async)?.email }}</div>
+          <div class="info-hint">Primary login email</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">User Role</div>
+          <div class="info-value role-text" [ngClass]="'role-' + ((user$ | async)?.role || 'candidate')">
+            {{ (user$ | async)?.role | uppercase }}
+          </div>
+          <div class="info-hint">Your account type</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">User ID</div>
+          <div class="info-value">{{ (user$ | async)?.userId || 'N/A' }}</div>
+          <div class="info-hint">Unique identifier</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Member Since</div>
+          <div class="info-value">
+            {{ (user$ | async)?.createdAt ? ((user$ | async)?.createdAt | date:'MMM d, y') : 'N/A' }}
+          </div>
+          <div class="info-hint">Account creation date</div>
+        </div>
+
+        <div class="info-card" *ngIf="(user$ | async)?.invigilatorCode">
+          <div class="info-label">Invigilator Code</div>
+          <div class="info-value">{{ (user$ | async)?.invigilatorCode }}</div>
+          <div class="info-hint">Share with candidates</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Session Status</div>
+          <div class="info-value">
+            <span class="status-indicator" [ngClass]="{ active: sessionActive() }"></span>
+            {{ sessionActive() ? 'Active' : 'Inactive' }}
+          </div>
+          <div class="info-hint">Current session state</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics Section (Candidates) -->
+    <section class="profile-section stats-section" *ngIf="(user$ | async)?.role === 'candidate'">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">📊</span>
+          Candidate Quiz Statistics & Analytics
+        </h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-info">
+            <div class="stat-label">Quizzes Attended</div>
+            <div class="stat-value">{{ candidateAttemptsCount }}</div>
+            <div class="stat-trend">Total completed attempts</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-info">
+            <div class="stat-label">Average Score</div>
+            <div class="stat-value">{{ candidateAvgScore }}%</div>
+            <div class="stat-trend">Across all attempts</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <div class="stat-label">Best Score</div>
+            <div class="stat-value">{{ candidateBestScore }}%</div>
+            <div class="stat-trend">Highest achievement</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-info">
+            <div class="stat-label">Total Questions</div>
+            <div class="stat-value">{{ candidateTotalQuestions }}</div>
+            <div class="stat-trend">Answered so far</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attended Quizzes Table -->
+      <div class="table-card" style="margin-top:20px" *ngIf="candidateHistory.length > 0">
+        <h3>Attended Quiz History</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Quiz Title</th>
+              <th>Date Attended</th>
+              <th>Score</th>
+              <th>Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of candidateHistory">
+              <td><strong>{{ h.quizTitle }}</strong></td>
+              <td>{{ h.attemptedAt | date:'medium' }}</td>
+              <td>{{ h.marksEarned }} / {{ h.totalMarks }}</td>
+              <td><strong>{{ h.percentage.toFixed(1) }}%</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="chart-box" style="margin-top:20px">
+        <h3>Quiz Performance Over Time</h3>
+        <div class="svg-bar-chart">
+          <div class="bar-col" *ngFor="let bar of chartBars">
+            <div class="bar-fill-wrap">
+              <div class="bar-fill" [style.height.%]="bar.heightPct" [title]="bar.value">
+                <span class="bar-val-tooltip">{{ bar.value }}</span>
+              </div>
+            </div>
+            <span class="bar-label">{{ bar.label }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Invigilator Statistics -->
+    <section class="profile-section stats-section" *ngIf="(user$ | async)?.role === 'invigilator'">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">📚</span>
+          Invigilator Analytics Dashboard
+        </h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-info">
+            <div class="stat-label">Quizzes Owned</div>
+            <div class="stat-value">{{ invigilatorQuizCount }}</div>
+            <div class="stat-trend">Active assessments created</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-label">Candidate Attempts</div>
+            <div class="stat-value">{{ invigilatorSubmissionsCount }}</div>
+            <div class="stat-trend">Total candidate submissions</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">Average Score</div>
+            <div class="stat-value">{{ invigilatorAvgScore }}%</div>
+            <div class="stat-trend">Across candidate attempts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="chart-box" style="margin-top:20px">
+        <h3>Candidate Attempts Over Time</h3>
+        <div class="svg-bar-chart">
+          <div class="bar-col" *ngFor="let bar of chartBars">
+            <div class="bar-fill-wrap">
+              <div class="bar-fill" [style.height.%]="bar.heightPct" [title]="bar.value">
+                <span class="bar-val-tooltip">{{ bar.value }}</span>
+              </div>
+            </div>
+            <span class="bar-label">{{ bar.label }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin Statistics (§6.4) -->
+    <section class="profile-section stats-section" *ngIf="(user$ | async)?.role === 'admin'">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">👑</span>
+          System-Wide Admin Analytics
+        </h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-info">
+            <div class="stat-label">Total Quizzes</div>
+            <div class="stat-value">{{ adminTotalQuizzes }}</div>
+            <div class="stat-trend">System-wide count</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-info">
+            <div class="stat-label">Candidate Attempts</div>
+            <div class="stat-value">{{ adminTotalAttempts }}</div>
+            <div class="stat-trend">System-wide submissions</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">👨‍🏫</div>
+          <div class="stat-info">
+            <div class="stat-label">Active Invigilators</div>
+            <div class="stat-value">{{ adminActiveInvigilators }}</div>
+            <div class="stat-trend">Registered invigilators</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-label">Registered Users</div>
+            <div class="stat-value">{{ adminTotalUsers }}</div>
+            <div class="stat-trend">Total system users</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📥</div>
+          <div class="stat-info">
+            <div class="stat-label">Attendance Downloads</div>
+            <div class="stat-value">{{ adminDownloadsCount }}</div>
+            <div class="stat-trend">Total report downloads</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="chart-box" style="margin-top:20px">
+        <h3>System-Wide Quiz Attempts Over Time</h3>
+        <div class="svg-bar-chart">
+          <div class="bar-col" *ngFor="let bar of chartBars">
+            <div class="bar-fill-wrap">
+              <div class="bar-fill" [style.height.%]="bar.heightPct" [title]="bar.value">
+                <span class="bar-val-tooltip">{{ bar.value }}</span>
+              </div>
+            </div>
+            <span class="bar-label">{{ bar.label }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings Section -->
+    <section class="profile-section settings-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">⚙️</span>
+          Preferences & Settings
+        </h2>
+      </div>
+
+      <div class="settings-group">
+        <div class="setting-item">
+          <div class="setting-info">
+            <h3 class="setting-title">Theme Preference</h3>
+            <p class="setting-description">Choose between light and dark mode</p>
+          </div>
+          <div class="setting-control">
+            <select class="theme-select" (change)="onThemeChange($event)">
+              <option value="dark" [selected]="currentTheme === 'dark'">Dark Mode</option>
+              <option value="light" [selected]="currentTheme === 'light'">Light Mode</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <h3 class="setting-title">Notifications</h3>
+            <p class="setting-description">Receive updates and alerts</p>
+          </div>
+          <div class="setting-control">
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <h3 class="setting-title">Email Digest</h3>
+            <p class="setting-description">Get weekly summary emails</p>
+          </div>
+          <div class="setting-control">
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Section -->
+    <section class="profile-section security-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">🔒</span>
+          Security & Privacy
+        </h2>
+      </div>
+
+      <div class="security-info">
+        <p class="info-text">
+          <span class="info-icon">ℹ️</span>
+          Your profile is read-only. To change your name or email, log out and sign in with updated details.
+        </p>
+
+        <div class="security-actions">
+          <button class="security-btn danger">
+            <span>🔐</span>
+            Change Password
+          </button>
+          <button class="security-btn danger">
+            <span>🗑️</span>
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      <div class="session-info">
+        <h3 class="subsection-title">Active Sessions</h3>
+        <div class="session-item">
+          <div class="session-details">
+            <div class="device-info">
+              <span class="device-icon">💻</span>
+              <div>
+                <p class="device-name">Current Session</p>
+                <p class="device-location">{{ sessionActive() ? 'Active now' : 'Inactive' }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="session-action">
+            <span class="status-badge active">Active</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="profile-footer">
+    <p class="footer-note">
+      <span class="footer-icon">📌</span>
+      Last updated: {{ lastUpdated | date:'MMM d, y HH:mm' }}
+    </p>
+  </div>
+</div>

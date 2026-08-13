@@ -1,0 +1,156 @@
+<div class="activities-container">
+  <!-- Header Section -->
+  <div class="activities-header">
+    <div class="header-title">
+      <h2>Activity Log</h2>
+      <p class="header-subtitle">Track and monitor all system activities</p>
+    </div>
+    <div class="total-badge">
+      <span class="badge-value">{{ entries.length }}</span>
+      <span class="badge-label">Total</span>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="email-filter">Actor Email</label>
+      <div class="input-wrapper">
+        <input
+          id="email-filter"
+          type="text"
+          placeholder="Search by email..."
+          [(ngModel)]="qEmail"
+          (keyup.enter)="apply()"
+          class="filter-input"
+        />
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label for="action-filter">Action Type</label>
+      <div class="input-wrapper">
+        <input
+          id="action-filter"
+          type="text"
+          placeholder="Search by action..."
+          [(ngModel)]="qAction"
+          (keyup.enter)="apply()"
+          class="filter-input"
+        />
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label for="start-date-filter">Start Date</label>
+      <div class="input-wrapper">
+        <input
+          id="start-date-filter"
+          type="date"
+          [(ngModel)]="startDate"
+          (change)="apply()"
+          class="filter-input"
+        />
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label for="end-date-filter">End Date</label>
+      <div class="input-wrapper">
+        <input
+          id="end-date-filter"
+          type="date"
+          [(ngModel)]="endDate"
+          (change)="apply()"
+          class="filter-input"
+        />
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn btn-primary" (click)="apply()">
+        <span>🔍</span> Filter
+      </button>
+      <button class="btn btn-secondary" (click)="clear()">
+        <span>✕</span> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info">
+    <span class="result-count">
+      Showing <strong>{{ pageItems.length }}</strong> of <strong>{{ filtered.length }}</strong> activities
+    </span>
+  </div>
+
+  <!-- Activities List -->
+  <div class="activities-list">
+    <div *ngIf="pageItems.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p class="empty-title">No activities found</p>
+      <p class="empty-text">Try adjusting your filters or check back later</p>
+    </div>
+
+    <div *ngFor="let activity of pageItems; let idx = index" class="activity-card" [attr.data-index]="idx">
+      <div class="card-header">
+        <div class="timestamp-badge">
+          {{ activity.timestamp | date:'short' }}
+        </div>
+        <span class="action-badge" [ngClass]="'action-' + (activity.actionType | lowercase)">
+          {{ activity.actionType }}
+        </span>
+      </div>
+
+      <div class="card-content">
+        <div class="actor-info">
+          <div class="actor-avatar">
+            {{ (activity.actorEmail || 'U').charAt(0).toUpperCase() }}
+          </div>
+          <div class="actor-details">
+            <p class="actor-email">{{ activity.actorEmail }}</p>
+            <p class="actor-role">{{ activity.actorRole }}</p>
+          </div>
+        </div>
+
+        <p class="activity-description">{{ activity.description }}</p>
+      </div>
+
+      <div class="card-footer">
+        <div class="metadata">
+          <span class="meta-item">
+            <span class="meta-icon">🕐</span>
+            <span class="meta-label">{{ activity.timestamp | date:'HH:mm:ss' }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-section">
+    <button
+      class="btn btn-pagination"
+      (click)="prev()"
+      [disabled]="page === 1"
+      [class.disabled]="page === 1"
+    >
+      ← Previous
+    </button>
+
+    <div class="pagination-info">
+      <span class="current-page">{{ page }}</span>
+      <span class="separator">/</span>
+      <span class="total-pages">{{ totalPages }}</span>
+    </div>
+
+    <button
+      class="btn btn-pagination"
+      (click)="next()"
+      [disabled]="page === totalPages"
+      [class.disabled]="page === totalPages"
+    >
+      Next →
+    </button>
+  </div>
+</div>

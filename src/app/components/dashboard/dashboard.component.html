@@ -16,7 +16,6 @@
       </div>
       <div class="header-tools">
         <button class="btn-theme" (click)="theme.toggle()">{{ currentTheme === 'dark' ? '🌙' : '🌞' }}</button>
-        <button class="btn-icon" (click)="openProfile()">Profile</button>
         <button class="btn-logout" (click)="logout()">Sign out</button>
       </div>
     </div>
@@ -51,36 +50,80 @@
     <!-- ── ATTEND TAB ── -->
     <section *ngIf="activeTab === 'attend'">
       <div class="section-header">
-        <h2>Available Quizzes</h2>
+        <h2>Attend a Quiz</h2>
+        <div class="test-mode-toggle" *ngIf="isInvigilator || isAdmin">
+          <label class="toggle-label">
+            <input type="checkbox" [(ngModel)]="isTestMode" />
+            <span class="toggle-text">Test Mode (attempts won't be saved)</span>
+          </label>
+        </div>
       </div>
 
-      <div class="loading-state" *ngIf="loading">
-        <div class="spinner-lg"></div>
-        <p>Loading quizzes from GitHub…</p>
-      </div>
+      <!-- Candidate Code Entry Card -->
+      <div class="card code-entry-card">
+        <div class="card-header">
+          <h3>🔑 Enter Quiz Code</h3>
+        </div>
+        <div class="card-body">
+          <p class="code-subtitle">Enter the 6-character Quiz Code provided by your invigilator to access your quiz.</p>
 
-      <div class="alert alert-error" *ngIf="loadError" style="margin-bottom: 20px;">
-        ⚠ {{ loadError }}
-      </div>
-
-      <div class="empty-state" *ngIf="!loading && quizzes.length === 0">
-        <div class="empty-icon">📋</div>
-        <h3>No quizzes yet</h3>
-        <p>Switch to <strong>Manage Quizzes</strong> to upload the first one.</p>
-      </div>
-
-      <div class="quiz-grid" *ngIf="!loading && quizzes.length > 0">
-        <div class="quiz-card" *ngFor="let quiz of quizzes">
-          <div class="quiz-card-header">
-            <span class="quiz-badge">{{ quiz.questions.length }} Qs</span>
+          <div class="code-input-group">
+            <input
+              type="text"
+              class="code-input"
+              [(ngModel)]="inputCode"
+              placeholder="e.g. ABC123"
+              maxlength="10"
+              (keyup.enter)="validateQuizCode()"
+            />
+            <button class="btn-primary btn-code" (click)="validateQuizCode()" [disabled]="codeSearching">
+              {{ codeSearching ? 'Searching…' : 'Access Quiz →' }}
+            </button>
           </div>
-          <h3>{{ quiz.title }}</h3>
-          <p class="quiz-desc" *ngIf="quiz.description">{{ quiz.description }}</p>
-          <div class="quiz-meta">
-            <span>📅 {{ quiz.createdAt | date:'mediumDate' }}</span>
-            <span>🏆 {{ quiz.questions | totalMarks }} marks</span>
+
+          <div class="alert alert-error" *ngIf="codeError" style="margin-top: 16px;">
+            ⚠️ {{ codeError }}
           </div>
-          <button class="btn-attend" (click)="attendQuiz(quiz)">Start Quiz →</button>
+
+          <!-- Found Quiz Preview Card -->
+          <div class="quiz-preview-box" *ngIf="foundQuiz">
+            <div class="preview-header">
+              <span class="quiz-badge">{{ foundQuiz.questions.length }} Questions</span>
+              <span class="marks-badge">🏆 {{ foundQuiz.questions | totalMarks }} Marks</span>
+            </div>
+            <h3 class="preview-title">{{ foundQuiz.title }}</h3>
+            <p class="preview-desc" *ngIf="foundQuiz.description">{{ foundQuiz.description }}</p>
+            <div class="preview-meta">
+              <span>Code: <strong>{{ foundQuiz.code }}</strong></span>
+              <span>Created: {{ foundQuiz.createdAt | date:'mediumDate' }}</span>
+            </div>
+
+            <button class="btn-attend btn-lg" (click)="startQuizFromCode()">
+              Start Quiz Now →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quizzes List Preview for Invigilators & Admins -->
+      <div class="card" style="margin-top:24px" *ngIf="isAdmin || isInvigilator">
+        <div class="card-header">
+          <h3>All Active Quizzes (Invigilator Overview)</h3>
+        </div>
+        <div class="quiz-grid" *ngIf="quizzes.length > 0">
+          <div class="quiz-card" *ngFor="let quiz of quizzes">
+            <div class="quiz-card-header">
+              <span class="quiz-badge">{{ quiz.questions.length }} Qs</span>
+              <span class="code-badge">Code: {{ quiz.code }}</span>
+            </div>
+            <h3>{{ quiz.title }}</h3>
+            <p class="quiz-desc" *ngIf="quiz.description">{{ quiz.description }}</p>
+            <div class="quiz-meta">
+              <span>🏆 {{ quiz.questions | totalMarks }} marks</span>
+              <span *ngIf="isOrphaned(quiz)" class="badge-orphan">⚠️ No Invigilator</span>
+            </div>
+            <button class="btn-attend" (click)="attendQuiz(quiz)">Preview Quiz →</button>
+          </div>
         </div>
       </div>
     </section>
@@ -138,39 +181,64 @@
         </div>
       </div>
 
-      <!-- Quizzes List for Admin -->
+      <!-- Quizzes List with Ownership Filter -->
       <div class="card" style="margin-top:24px">
-        <div class="card-header">
-          <h2>All Quizzes</h2>
-          <button class="btn-icon" (click)="loadQuizzes()">↻ Refresh</button>
+        <div class="card-header flex-header">
+          <h2>Quiz Management</h2>
+          <div class="filter-toolbar">
+            <div class="filter-toggle">
+              <button
+                [class.active]="quizFilter === 'my'"
+                (click)="quizFilter = 'my'"
+                title="Quizzes owned by you"
+              >My Quizzes</button>
+              <button
+                [class.active]="quizFilter === 'all'"
+                (click)="quizFilter = 'all'"
+                title="All quizzes in system"
+              >All Quizzes</button>
+            </div>
+            <button class="btn-icon" (click)="loadQuizzes()">↻ Refresh</button>
+          </div>
         </div>
 
         <div class="loading-state" *ngIf="loading">
           <div class="spinner-lg"></div><p>Loading…</p>
         </div>
 
-        <div class="empty-state" *ngIf="!loading && quizzes.length === 0">
+        <div class="empty-state" *ngIf="!loading && filteredQuizzes.length === 0">
           <div class="empty-icon">📋</div>
-          <h3>No quizzes uploaded yet.</h3>
+          <h3>No quizzes found.</h3>
+          <p *ngIf="quizFilter === 'my'">You haven't uploaded any quizzes yet. Switch to <strong>All Quizzes</strong> or upload a new one above.</p>
         </div>
 
-        <div class="table-wrap" *ngIf="!loading && quizzes.length > 0">
+        <div class="table-wrap" *ngIf="!loading && filteredQuizzes.length > 0">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Title</th>
+                <th>Quiz Info</th>
+                <th>Quiz Code</th>
                 <th>Questions</th>
                 <th>Total Marks</th>
-                <th>Created</th>
+                <th>Owner / Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let quiz of quizzes">
-                <td><strong>{{ quiz.title }}</strong><br><small>{{ quiz.id }}</small></td>
+              <tr *ngFor="let quiz of filteredQuizzes">
+                <td>
+                  <strong>{{ quiz.title }}</strong><br>
+                  <small>{{ quiz.id }}</small>
+                </td>
+                <td>
+                  <code class="code-pill">{{ quiz.code || 'N/A' }}</code>
+                </td>
                 <td>{{ quiz.questions.length }}</td>
                 <td>{{ quiz.questions | totalMarks }}</td>
-                <td>{{ quiz.createdAt | date:'mediumDate' }}</td>
+                <td>
+                  <span *ngIf="!isOrphaned(quiz)" class="owner-tag">👤 {{ quiz.invigilatorId }}</span>
+                  <span *ngIf="isOrphaned(quiz)" class="badge-orphan">⚠️ No Invigilator</span>
+                </td>
                 <td>
                   <div class="action-btns">
                     <button class="btn-sm btn-attend" (click)="attendQuiz(quiz)">Preview</button>
@@ -180,6 +248,7 @@
                       [disabled]="downloadingId === quiz.id">
                       {{ downloadingId === quiz.id ? '…' : '⬇ Attendees' }}
                     </button>
+                    <button class="btn-sm btn-relink" (click)="openRelinkModal(quiz)" title="Re-link Quiz Code">🔗 Code</button>
                     <button class="btn-sm btn-delete" *ngIf="isAdmin || isInvigilator" (click)="deleteQuiz(quiz)">🗑 Delete</button>
                   </div>
                 </td>
@@ -189,7 +258,29 @@
         </div>
       </div>
 
-      <!-- admin actions moved to its own tab -->
+      <!-- Code Re-linking Modal -->
+      <div class="modal-backdrop" *ngIf="relinkQuiz">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>🔗 Re-link Quiz Code</h3>
+            <button class="btn-close" (click)="closeRelinkModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <p>Assign an existing or new Quiz Code to <strong>{{ relinkQuiz.title }}</strong>.</p>
+            <div class="field">
+              <label>Quiz Code *</label>
+              <input type="text" [(ngModel)]="relinkCodeInput" placeholder="e.g. WEEKLY1" maxlength="10" />
+            </div>
+            <div class="alert alert-error" *ngIf="relinkError">⚠️ {{ relinkError }}</div>
+            <div class="alert alert-success" *ngIf="relinkSuccess">✓ {{ relinkSuccess }}</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeRelinkModal()">Cancel</button>
+            <button class="btn-primary" (click)="confirmRelinkCode()">Save Code</button>
+          </div>
+        </div>
+      </div>
+
     </section>
 
     <!-- profile is now a dedicated route at /profile -->
@@ -199,7 +290,7 @@
       <div class="card">
         <div class="card-header"><h2>Admin Actions</h2></div>
         <div class="card-body">
-          <h3>Invigilators</h3>
+          <h3>Invigilators</h3><br>
           <div class="invigilator-form">
             <input type="email" [(ngModel)]="newInvEmail" placeholder="Invigilator email" />
             <button class="btn-sm" (click)="addInvigilator()">Add Invigilator</button>

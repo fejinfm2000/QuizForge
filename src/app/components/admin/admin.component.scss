@@ -1,0 +1,570 @@
+.admin-container {
+  padding: 32px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+// ── Header Section ────────────────────────────────────────────────────────
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+
+  .header-content {
+    flex: 1;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+
+      .header-icon {
+        font-size: 36px;
+        -webkit-text-fill-color: unset;
+        background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+        -webkit-background-clip: text;
+      }
+    }
+
+    .header-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin: 0;
+    }
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      animation: pulse 2s infinite;
+
+      &.active {
+        background: #22c55e;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+      }
+    }
+
+    .status-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// ── Section Title ─────────────────────────────────────────────────────────
+.section-title {
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin: 0;
+  }
+}
+
+// ── Quick Actions Section ─────────────────────────────────────────────────
+.quick-actions {
+  margin-bottom: 40px;
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+}
+
+// ── Action Card ───────────────────────────────────────────────────────────
+.action-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+    transform: translateY(-2px);
+
+    &::before {
+      opacity: 1;
+    }
+
+    .action-btn {
+      transform: translateX(4px);
+    }
+  }
+
+  .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-radius: 12px;
+    font-size: 28px;
+    background: var(--input-bg);
+    flex-shrink: 0;
+
+    &.refresh-icon {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+    }
+
+    &.migration-icon {
+      background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), rgba(168, 85, 247, 0.1));
+    }
+  }
+
+  .card-info {
+    flex: 1;
+    min-width: 0;
+
+    .action-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .action-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .action-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0;
+      font-weight: 400;
+    }
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    .btn-arrow {
+      font-size: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      .btn-arrow {
+        transform: translateX(2px);
+      }
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+    }
+  }
+
+  .btn-warning {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    color: white;
+    box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(251, 146, 60, 0.4);
+    }
+  }
+}
+
+// ── Section Divider ───────────────────────────────────────────────────────
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 48px 0;
+}
+
+// ── Activities Section ────────────────────────────────────────────────────
+.activities-section {
+  margin-bottom: 32px;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 16px;
+
+    .section-title {
+      margin-bottom: 0;
+    }
+
+    .activity-stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .stat-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+
+        .stat-icon {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .activities-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+    }
+
+    ::ng-deep .activities-container {
+      padding: 0;
+    }
+
+    ::ng-deep .activities-header {
+      margin-bottom: 24px;
+      padding: 24px;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.05), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    ::ng-deep .filters-section {
+      margin: 24px;
+      margin-bottom: 24px;
+    }
+
+    ::ng-deep .results-info {
+      margin: 0 24px 20px;
+    }
+
+    ::ng-deep .activities-list {
+      margin: 0 24px;
+    }
+
+    ::ng-deep .pagination-section {
+      margin: 32px 24px 0;
+    }
+  }
+}
+
+// ── Admin Footer ──────────────────────────────────────────────────────────
+.admin-footer {
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+
+  .footer-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    font-weight: 500;
+
+    .footer-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+// ── Responsive Design ─────────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .admin-container {
+    padding: 24px 16px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    gap: 16px;
+
+    .header-status {
+      align-self: flex-start;
+    }
+  }
+
+  .action-card {
+    flex-direction: column;
+    text-align: center;
+
+    .card-info {
+      text-align: left;
+    }
+
+    .card-icon {
+      margin: 0 auto;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 16px;
+  }
+
+  .admin-header {
+    padding: 20px;
+
+    .header-title {
+      font-size: 26px;
+
+      .header-icon {
+        font-size: 28px;
+      }
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+    }
+  }
+
+  .section-title {
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 20px;
+    }
+
+    .section-subtitle {
+      font-size: 13px;
+    }
+  }
+
+  .quick-actions {
+    margin-bottom: 32px;
+
+    .actions-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
+  .action-card {
+    padding: 20px;
+    gap: 16px;
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+  }
+
+  .section-divider {
+    margin: 36px 0;
+  }
+
+  .activities-section {
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .activity-stats {
+        width: 100%;
+      }
+    }
+
+    .activities-wrapper {
+      ::ng-deep .activities-header {
+        padding: 16px;
+      }
+
+      ::ng-deep .filters-section {
+        margin: 16px;
+        grid-template-columns: 1fr;
+      }
+
+      ::ng-deep .results-info {
+        margin: 0 16px;
+      }
+
+      ::ng-deep .activities-list {
+        margin: 0 16px;
+      }
+
+      ::ng-deep .pagination-section {
+        margin: 24px 16px 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-container {
+    padding: 12px;
+  }
+
+  .admin-header {
+    padding: 16px;
+
+    .header-title {
+      font-size: 22px;
+
+      .header-icon {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .action-card {
+    padding: 16px;
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .card-info {
+      .action-title {
+        font-size: 15px;
+      }
+
+      .action-description {
+        font-size: 13px;
+      }
+    }
+
+    .action-btn {
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+  }
+
+  .activities-section {
+    .activities-wrapper {
+      ::ng-deep .activities-header {
+        padding: 12px;
+
+        .header-title {
+          font-size: 20px;
+        }
+      }
+
+      ::ng-deep .filters-section {
+        margin: 12px;
+        padding: 12px;
+      }
+
+      ::ng-deep .results-info {
+        margin: 0 12px;
+      }
+
+      ::ng-deep .activities-list {
+        margin: 0 12px;
+      }
+
+      ::ng-deep .pagination-section {
+        margin: 16px 12px 0;
+        padding: 12px;
+      }
+    }
+  }
+}

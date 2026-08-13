@@ -1,0 +1,85 @@
+<div class="admin-container">
+  <!-- Header Section -->
+  <div class="admin-header">
+    <div class="header-content">
+      <h1 class="header-title">
+        <span class="header-icon">⚙️</span>
+        Admin Dashboard
+      </h1>
+      <p class="header-subtitle">Manage system settings, data, and monitor activities</p>
+    </div>
+    <div class="header-status">
+      <div class="status-indicator active"></div>
+      <span class="status-text">System Active</span>
+    </div>
+  </div>
+
+  <!-- Quick Actions Section -->
+  <div class="quick-actions">
+    <div class="section-title">
+      <h2>Quick Actions</h2>
+      <p class="section-subtitle">Manage your system data and settings</p>
+    </div>
+
+    <div class="actions-grid">
+      <!-- Refresh Data Action -->
+      <div class="action-card">
+        <div class="card-icon refresh-icon">🔄</div>
+        <div class="card-info">
+          <h3 class="action-title">Refresh Data</h3>
+          <p class="action-description">Reload all quizzes and statistics</p>
+          <p class="action-hint">Updates cached data from source</p>
+        </div>
+        <button class="action-btn btn-primary" (click)="refreshAll()">
+          <span>Refresh</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Quiz Migration Action -->
+      <div class="action-card">
+        <div class="card-icon migration-icon">📦</div>
+        <div class="card-info">
+          <h3 class="action-title">Quiz Migration</h3>
+          <p class="action-description">Run quiz data migration</p>
+          <p class="action-hint">Migrates and rewrites all quizzes</p>
+        </div>
+        <button class="action-btn btn-warning" (click)="migrate()">
+          <span>Migrate</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+  <!-- Activities Section -->
+  <div class="activities-section">
+    <div class="section-header">
+      <div class="section-title">
+        <h2>System Activities</h2>
+        <p class="section-subtitle">Real-time monitoring of system events</p>
+      </div>
+      <div class="activity-stats">
+        <span class="stat-item">
+          <span class="stat-icon">📋</span>
+          <span class="stat-text">Live Feed</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="activities-wrapper">
+      <app-activities></app-activities>
+    </div>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="admin-footer">
+    <p class="footer-text">
+      <span class="footer-icon">ℹ️</span>
+      All changes are automatically logged and tracked in the activities section above
+    </p>
+  </div>
+</div>

@@ -10,7 +10,7 @@ export const environment = {
     repo: (window as any).__ENV__?.GITHUB_REPO || 'QuizForge',
     branch: 'main',
     basePath: 'quizzes',
-    admins: ['admin@example.com', 'fejinfm2000@gmail.com','admin@gmail.com'],
+    admins: ['admin@example.com', 'fejinfm2000@gmail.com', 'admin@gmail.com'],
     invigilators: ['invigilator@example.com']
   }
 };

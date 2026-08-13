@@ -48,6 +48,35 @@ export class QuizService {
     return this.migrateLegacyQuiz(raw);
   }
 
+  async getQuizByCode(code: string): Promise<Quiz | null> {
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) return null;
+    let quizzes = this.quizzesSubject.value;
+    if (!quizzes.length) {
+      await this.loadQuizzes();
+      quizzes = this.quizzesSubject.value;
+    }
+    const found = quizzes.find(q => (q.code || '').trim().toUpperCase() === cleanCode);
+    return found ?? null;
+  }
+
+  async relinkQuizCode(targetQuizId: string, existingCode: string): Promise<void> {
+    const cleanCode = existingCode.trim().toUpperCase();
+    if (!cleanCode) throw new Error('Code cannot be empty');
+    
+    let quizzes = this.quizzesSubject.value;
+    if (!quizzes.length) {
+      await this.loadQuizzes();
+      quizzes = this.quizzesSubject.value;
+    }
+    
+    const targetQuiz = quizzes.find(q => q.id === targetQuizId);
+    if (!targetQuiz) throw new Error('Target quiz not found');
+
+    targetQuiz.code = cleanCode;
+    await this.uploadQuiz(targetQuiz);
+  }
+
   // ── Upload Quiz ────────────────────────────────────────────────────────────
 
   async uploadQuiz(quiz: Quiz): Promise<void> {

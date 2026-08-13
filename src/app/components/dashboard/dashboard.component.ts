@@ -44,6 +44,21 @@ export class DashboardComponent implements OnInit {
   uploadSuccess = '';
   loadError = '';
 
+  // Candidate Code Entry state
+  inputCode = '';
+  foundQuiz: Quiz | null = null;
+  codeError = '';
+  codeSearching = false;
+
+  // Invigilator Filter state ('my' by default per spec 5.3)
+  quizFilter: 'my' | 'all' = 'my';
+
+  // Code relink state
+  relinkQuiz: Quiz | null = null;
+  relinkCodeInput = '';
+  relinkError = '';
+  relinkSuccess = '';
+
   // Tab
   activeTab: 'attend' | 'manage' | 'admin' = 'attend';
   // Invigilator test mode toggle
@@ -188,11 +203,13 @@ export class DashboardComponent implements OnInit {
       const questions: QuizQuestion[] = await this.excel.parseQuizExcel(this.selectedFile);
       const id = this.quizService.slugify(this.quizTitle);
       const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
+      const currentUserEmail = this.auth.currentUser?.email || null;
 
       const quiz: Quiz = {
         id,
         title: this.quizTitle.trim(),
         description: this.quizDescription.trim() || undefined,
+        invigilatorId: currentUserEmail,
         questions,
         createdAt: new Date().toISOString(),
         githubPath: `${environment.github.basePath}/${id}/quiz.json`,
@@ -200,7 +217,18 @@ export class DashboardComponent implements OnInit {
       };
 
       await this.quizService.uploadQuiz(quiz);
-      this.uploadSuccess = `"${quiz.title}" uploaded with ${questions.length} questions (${totalMarks} marks total).`;
+      try {
+        await this.activityService.log({
+          actorEmail: currentUserEmail || undefined,
+          actorRole: this.auth.currentUser?.role,
+          actionType: 'QUIZ_UPLOADED',
+          targetId: id,
+          targetType: 'quiz',
+          description: `Uploaded quiz ${quiz.title} (${questions.length} questions)`
+        });
+      } catch {}
+
+      this.uploadSuccess = `"${quiz.title}" uploaded with ${questions.length} questions (${totalMarks} marks total). Quiz Code: ${quiz.code}`;
       this.quizTitle = '';
       this.quizDescription = '';
       this.selectedFile = null;
@@ -211,6 +239,82 @@ export class DashboardComponent implements OnInit {
       this.uploadError = e?.message ?? 'Upload failed. Check your GitHub config.';
     } finally {
       this.uploading = false;
+    }
+  }
+
+  // ── Candidate Quiz Code Lookup ─────────────────────────────────────────────
+
+  async validateQuizCode(): Promise<void> {
+    this.codeError = '';
+    this.foundQuiz = null;
+    const code = this.inputCode.trim().toUpperCase();
+    if (!code) {
+      this.codeError = 'Please enter a quiz code.';
+      return;
+    }
+    this.codeSearching = true;
+    try {
+      const quiz = await this.quizService.getQuizByCode(code);
+      if (!quiz) {
+        this.codeError = `No quiz found with code "${code}". Please check and try again.`;
+      } else {
+        this.foundQuiz = quiz;
+      }
+    } catch (e: any) {
+      this.codeError = 'Failed to validate code: ' + (e?.message ?? e);
+    } finally {
+      this.codeSearching = false;
+    }
+  }
+
+  startQuizFromCode(): void {
+    if (!this.foundQuiz) return;
+    this.router.navigate(['/quiz', this.foundQuiz.id], { queryParams: { test: this.isTestMode } });
+  }
+
+  // ── Quizzes Filtering & Orphan Detection ───────────────────────────────────
+
+  get filteredQuizzes(): Quiz[] {
+    if (this.quizFilter === 'all') {
+      return this.quizzes;
+    }
+    const userEmail = (this.auth.currentUser?.email || '').toLowerCase().trim();
+    return this.quizzes.filter(q => (q.invigilatorId || '').toLowerCase().trim() === userEmail);
+  }
+
+  isOrphaned(quiz: Quiz): boolean {
+    if (!quiz.invigilatorId) return true;
+    if (this.invigilatorsList.length > 0) {
+      return !this.invigilatorsList.map(i => i.toLowerCase()).includes(quiz.invigilatorId.toLowerCase());
+    }
+    return false;
+  }
+
+  // ── Code Re-linking ────────────────────────────────────────────────────────
+
+  openRelinkModal(quiz: Quiz): void {
+    this.relinkQuiz = quiz;
+    this.relinkCodeInput = quiz.code || '';
+    this.relinkError = '';
+    this.relinkSuccess = '';
+  }
+
+  closeRelinkModal(): void {
+    this.relinkQuiz = null;
+    this.relinkCodeInput = '';
+  }
+
+  async confirmRelinkCode(): Promise<void> {
+    if (!this.relinkQuiz || !this.relinkCodeInput.trim()) {
+      this.relinkError = 'Please enter a valid quiz code.';
+      return;
+    }
+    try {
+      await this.quizService.relinkQuizCode(this.relinkQuiz.id, this.relinkCodeInput.trim());
+      this.relinkSuccess = `Code "${this.relinkCodeInput.trim().toUpperCase()}" re-linked to "${this.relinkQuiz.title}".`;
+      setTimeout(() => this.closeRelinkModal(), 1500);
+    } catch (e: any) {
+      this.relinkError = e?.message ?? 'Failed to re-link code.';
     }
   }
 
