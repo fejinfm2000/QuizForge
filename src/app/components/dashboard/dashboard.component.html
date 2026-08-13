@@ -109,8 +109,30 @@
       <div class="card" style="margin-top:24px" *ngIf="isAdmin || isInvigilator">
         <div class="card-header">
           <h3>All Active Quizzes (Invigilator Overview)</h3>
+          <button class="btn-icon" (click)="loadQuizzes()">↻ Refresh</button>
         </div>
-        <div class="quiz-grid" *ngIf="quizzes.length > 0">
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="loading" style="padding: 32px; text-align: center;">
+          <div class="spinner-lg"></div>
+          <p style="margin-top: 12px; color: var(--text-secondary);">Loading quizzes from GitHub…</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="empty-state" *ngIf="!loading && loadError">
+          <div class="empty-icon">⚠️</div>
+          <p class="empty-title" style="color: #ef4444;">{{ loadError }}</p>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!loading && !loadError && quizzes.length === 0">
+          <div class="empty-icon">📋</div>
+          <p class="empty-title">No quizzes found</p>
+          <p style="color: var(--text-muted); font-size: 13px;">Upload a quiz in the Manage tab to get started.</p>
+        </div>
+
+        <!-- Quiz Grid -->
+        <div class="quiz-grid" *ngIf="!loading && quizzes.length > 0">
           <div class="quiz-card" *ngFor="let quiz of quizzes">
             <div class="quiz-card-header">
               <span class="quiz-badge">{{ quiz.questions.length }} Qs</span>
@@ -231,7 +253,16 @@
                   <small>{{ quiz.id }}</small>
                 </td>
                 <td>
-                  <code class="code-pill">{{ quiz.code || 'N/A' }}</code>
+                  <div class="code-box">
+                    <code class="code-pill">{{ quiz.code || 'N/A' }}</code>
+                    <button
+                      class="btn-icon-sm"
+                      (click)="copyQuizCode(quiz, $event)"
+                      [title]="copiedQuizId === quiz.id ? 'Copied!' : 'Copy Quiz Code'"
+                    >
+                      {{ copiedQuizId === quiz.id ? '✓' : '📋' }}
+                    </button>
+                  </div>
                 </td>
                 <td>{{ quiz.questions.length }}</td>
                 <td>{{ quiz.questions | totalMarks }}</td>
@@ -241,6 +272,7 @@
                 </td>
                 <td>
                   <div class="action-btns">
+                    <button class="btn-sm btn-share" (click)="openShareModal(quiz)" title="Share Quiz Code">📢 Share</button>
                     <button class="btn-sm btn-attend" (click)="attendQuiz(quiz)">Preview</button>
                     <button
                       class="btn-sm btn-download"
@@ -276,7 +308,43 @@
           </div>
           <div class="modal-footer">
             <button class="btn-secondary" (click)="closeRelinkModal()">Cancel</button>
-            <button class="btn-primary" (click)="confirmRelinkCode()">Save Code</button>
+            <button class="btn-primary" (click)="confirmRelinkCode()" [disabled]="isRelinking">
+              <span *ngIf="!isRelinking">Save Code</span>
+              <span *ngIf="isRelinking" class="btn-loading"><span class="spinner-sm"></span> Saving…</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share Quiz Code Modal -->
+      <div class="modal-backdrop" *ngIf="shareModalQuiz">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>📢 Share Quiz Code with Candidate</h3>
+            <button class="btn-close" (click)="closeShareModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <p>Share this code with candidates so they can access <strong>{{ shareModalQuiz.title }}</strong>.</p>
+            
+            <div class="share-code-display">
+              <div class="code-info">
+                <span class="share-label">QUIZ CODE</span>
+                <span class="share-code-value">{{ shareModalQuiz.code }}</span>
+              </div>
+              <button class="btn-primary btn-sm" (click)="copyQuizCode(shareModalQuiz)">
+                {{ copiedQuizId === shareModalQuiz.id ? '✓ Code Copied' : '📋 Copy Code Only' }}
+              </button>
+            </div>
+
+            <div class="field" style="margin-top: 16px;">
+              <label>Invitation Message Preview</label>
+              <textarea class="share-textarea" readonly rows="4" [value]="getShareMessage(shareModalQuiz)"></textarea>
+            </div>
+            <div class="alert alert-success" *ngIf="shareCopied" style="margin-top: 10px;">✓ Invitation text copied to clipboard!</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeShareModal()">Close</button>
+            <button class="btn-primary" (click)="copyShareMessage(shareModalQuiz)">📋 Copy Full Invitation Text</button>
           </div>
         </div>
       </div>
@@ -292,12 +360,15 @@
         <div class="card-body">
           <h3>Invigilators</h3><br>
           <div class="invigilator-form">
-            <input type="email" [(ngModel)]="newInvEmail" placeholder="Invigilator email" />
-            <button class="btn-sm" (click)="addInvigilator()">Add Invigilator</button>
+            <input type="email" [(ngModel)]="newInvEmail" placeholder="Invigilator email" [disabled]="invigilatorBusy" />
+            <button class="btn-sm" (click)="addInvigilator()" [disabled]="invigilatorBusy">
+              <span *ngIf="!invigilatorBusy">Add Invigilator</span>
+              <span *ngIf="invigilatorBusy"><span class="spinner-sm"></span> Adding…</span>
+            </button>
           </div>
           <ul class="invigilator-list">
             <li *ngFor="let i of invigilatorsList">
-              {{ i }} <button class="btn-sm btn-delete" (click)="removeInvigilator(i)">Remove</button>
+              {{ i }} <button class="btn-sm btn-delete" (click)="removeInvigilator(i)" [disabled]="invigilatorBusy">Remove</button>
             </li>
           </ul>
 

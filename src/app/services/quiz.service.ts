@@ -114,9 +114,26 @@ export class QuizService {
 
   // ── Migration helpers ─────────────────────────────────────────────────────
 
+  generateDeterministicCode(str: string): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    let code = '';
+    hash = Math.abs(hash);
+    for (let i = 0; i < 6; i++) {
+      code += chars[(hash + i * 7) % chars.length];
+    }
+    return code;
+  }
+
   migrateLegacyQuiz(raw: any): Quiz {
-    // Detect an older format with optionA/optionB etc.
     if (!raw) return raw;
+    const quizId = raw.id || (raw.title && this.slugify(raw.title)) || 'unknown';
+    const code = raw.code || this.generateDeterministicCode(quizId);
+
     if (raw.questions && raw.questions.length && raw.questions[0].optionA !== undefined) {
       const questions = raw.questions.map((q: any, idx: number) => ({
         questionId: (q.id ?? idx).toString(),
@@ -133,10 +150,10 @@ export class QuizService {
       }));
 
       return {
-        id: raw.id || raw.title && this.slugify(raw.title) || 'unknown',
+        id: quizId,
         title: raw.title || '',
         description: raw.description,
-        code: raw.code,
+        code: code,
         invigilatorId: raw.invigilatorId || null,
         questions,
         createdAt: raw.createdAt || new Date().toISOString(),
@@ -145,8 +162,12 @@ export class QuizService {
       } as Quiz;
     }
 
-    // Assume already in new shape
-    return raw as Quiz;
+    // Assume already in new shape but guarantee code exists
+    return {
+      ...raw,
+      id: quizId,
+      code: code
+    } as Quiz;
   }
 
   generateQuizCode(len = 6): string {

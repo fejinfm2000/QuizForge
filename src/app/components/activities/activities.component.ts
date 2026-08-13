@@ -26,6 +26,7 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
   qAction = '';
   startDate = '';
   endDate = '';
+  loading = true;
 
   currentTheme: 'light' | 'dark' = 'dark';
   private destroy$ = new Subject<void>();
@@ -52,10 +53,13 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
       });
 
     // Initial refresh
+    this.loading = true;
     try {
       await this.activity.refresh();
     } catch (error) {
       console.error('Failed to refresh activities:', error);
+    } finally {
+      this.loading = false;
     }
   }
 

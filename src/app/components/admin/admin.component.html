@@ -30,9 +30,10 @@
           <p class="action-description">Reload all quizzes and statistics</p>
           <p class="action-hint">Updates cached data from source</p>
         </div>
-        <button class="action-btn btn-primary" (click)="refreshAll()">
-          <span>Refresh</span>
-          <span class="btn-arrow">→</span>
+        <button class="action-btn btn-primary" (click)="refreshAll()" [disabled]="isRefreshing">
+          <span *ngIf="!isRefreshing">Refresh</span>
+          <span *ngIf="isRefreshing" class="btn-loading"><span class="spinner-sm"></span> Refreshing…</span>
+          <span class="btn-arrow" *ngIf="!isRefreshing">→</span>
         </button>
       </div>
 
@@ -44,9 +45,10 @@
           <p class="action-description">Run quiz data migration</p>
           <p class="action-hint">Migrates and rewrites all quizzes</p>
         </div>
-        <button class="action-btn btn-warning" (click)="migrate()">
-          <span>Migrate</span>
-          <span class="btn-arrow">→</span>
+        <button class="action-btn btn-warning" (click)="migrate()" [disabled]="isMigrating">
+          <span *ngIf="!isMigrating">Migrate</span>
+          <span *ngIf="isMigrating" class="btn-loading"><span class="spinner-sm"></span> Migrating…</span>
+          <span class="btn-arrow" *ngIf="!isMigrating">→</span>
         </button>
       </div>
     </div>

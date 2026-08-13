@@ -12,12 +12,15 @@ export class GithubService {
   constructor(private http: HttpClient) {}
 
   private get headers(): HttpHeaders {
-    return new HttpHeaders({
-      Authorization: `Bearer ${this.cfg.token}`,
+    const h: Record<string, string> = {
       Accept: 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
       'X-GitHub-Api-Version': '2022-11-28'
-    });
+    };
+    if (this.cfg.token && this.cfg.token.trim()) {
+      h['Authorization'] = `Bearer ${this.cfg.token}`;
+    }
+    return new HttpHeaders(h);
   }
 
   private repoUrl(path: string): string {
@@ -96,7 +99,11 @@ export class GithubService {
 
   private handleError(err: any): never {
     if (err?.status === 401) {
-      throw new Error('Unauthorized: Your GitHub token is invalid or has expired. Please update it in environment.ts.');
+      const hasToken = !!(this.cfg.token && this.cfg.token.trim());
+      const msg = hasToken
+        ? 'Unauthorized: Your GitHub token is invalid or has expired. Please update it in environment.ts.'
+        : 'Unauthorized: No GitHub token is configured. Set GITHUB_TOKEN in environment.ts to enable read/write access.';
+      throw new Error(msg);
     }
     if (err?.status === 403) {
       throw new Error('Forbidden: Your token may have expired or lacks the necessary "repo" scope.');

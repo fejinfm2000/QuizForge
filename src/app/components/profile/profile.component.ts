@@ -43,6 +43,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   adminTotalUsers = 0;
   adminDownloadsCount = 0;
 
+  // Loading state
+  loading = true;
+
   // Chart data points (0 to 100 height percentages for SVG bars)
   chartBars: { label: string; heightPct: number; value: string }[] = [];
 
@@ -69,8 +72,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   async loadProfileData(): Promise<void> {
+    this.loading = true;
     const user = this.auth.currentUser;
-    if (!user) return;
+    if (!user) {
+      this.loading = false;
+      return;
+    }
 
     // Load Candidate local history
     try {
@@ -135,6 +142,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     } catch (e) {
       console.error('Failed to load profile analytics data:', e);
+    } finally {
+      this.loading = false;
     }
   }
 

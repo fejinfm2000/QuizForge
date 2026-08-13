@@ -86,13 +86,19 @@
 
   <!-- Activities List -->
   <div class="activities-list">
-    <div *ngIf="pageItems.length === 0" class="empty-state">
+    <div *ngIf="loading" class="empty-state" style="padding: 32px 16px;">
+      <div class="spinner-lg" style="margin: 0 auto 12px;"></div>
+      <p class="empty-title">Loading activity log from GitHub…</p>
+    </div>
+
+    <div *ngIf="!loading && pageItems.length === 0" class="empty-state">
       <div class="empty-icon">📋</div>
       <p class="empty-title">No activities found</p>
       <p class="empty-text">Try adjusting your filters or check back later</p>
     </div>
 
-    <div *ngFor="let activity of pageItems; let idx = index" class="activity-card" [attr.data-index]="idx">
+    <div *ngIf="!loading">
+      <div *ngFor="let activity of pageItems; let idx = index" class="activity-card" [attr.data-index]="idx">
       <div class="card-header">
         <div class="timestamp-badge">
           {{ activity.timestamp | date:'short' }}

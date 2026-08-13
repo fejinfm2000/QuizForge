@@ -59,6 +59,15 @@ export class DashboardComponent implements OnInit {
   relinkError = '';
   relinkSuccess = '';
 
+  // Code Copy / Share state
+  copiedQuizId: string | null = null;
+  shareModalQuiz: Quiz | null = null;
+  shareCopied = false;
+
+  // Invigilator & Relink action busy states
+  invigilatorBusy = false;
+  isRelinking = false;
+
   // Tab
   activeTab: 'attend' | 'manage' | 'admin' = 'attend';
   // Invigilator test mode toggle
@@ -124,6 +133,7 @@ export class DashboardComponent implements OnInit {
   async addInvigilator(): Promise<void> {
     const email = this.newInvEmail.trim().toLowerCase();
     if (!email) return alert('Enter an email');
+    this.invigilatorBusy = true;
     try {
       await this.invigilatorService.add(email);
       await this.activityService.log({ actorEmail: this.auth.currentUser?.email, actorRole: 'admin', actionType: 'INVIGILATOR_ADDED', description: `Added invigilator ${email}`, targetId: email, targetType: 'invigilator' });
@@ -131,17 +141,22 @@ export class DashboardComponent implements OnInit {
       await this.loadInvigilators();
     } catch (e: any) {
       alert('Failed to add invigilator: ' + (e?.message ?? e));
+    } finally {
+      this.invigilatorBusy = false;
     }
   }
 
   async removeInvigilator(email: string): Promise<void> {
     if (!(await this.confirm.confirm(`Remove invigilator ${email}?`))) return;
+    this.invigilatorBusy = true;
     try {
       await this.invigilatorService.remove(email);
       await this.activityService.log({ actorEmail: this.auth.currentUser?.email, actorRole: 'admin', actionType: 'INVIGILATOR_REMOVED', description: `Removed invigilator ${email}`, targetId: email, targetType: 'invigilator' });
       await this.loadInvigilators();
     } catch (e: any) {
       alert('Failed to remove invigilator: ' + (e?.message ?? e));
+    } finally {
+      this.invigilatorBusy = false;
     }
   }
 
@@ -309,12 +324,56 @@ export class DashboardComponent implements OnInit {
       this.relinkError = 'Please enter a valid quiz code.';
       return;
     }
+    this.isRelinking = true;
     try {
       await this.quizService.relinkQuizCode(this.relinkQuiz.id, this.relinkCodeInput.trim());
       this.relinkSuccess = `Code "${this.relinkCodeInput.trim().toUpperCase()}" re-linked to "${this.relinkQuiz.title}".`;
       setTimeout(() => this.closeRelinkModal(), 1500);
     } catch (e: any) {
       this.relinkError = e?.message ?? 'Failed to re-link code.';
+    } finally {
+      this.isRelinking = false;
+    }
+  }
+
+  // ── Code Sharing & Copying ──────────────────────────────────────────────────
+
+  async copyQuizCode(quiz: Quiz, event?: Event): Promise<void> {
+    if (event) event.stopPropagation();
+    const code = quiz.code || '';
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      this.copiedQuizId = quiz.id;
+      setTimeout(() => { if (this.copiedQuizId === quiz.id) this.copiedQuizId = null; }, 2000);
+    } catch {
+      alert(`Quiz Code: ${code}`);
+    }
+  }
+
+  openShareModal(quiz: Quiz): void {
+    this.shareModalQuiz = quiz;
+    this.shareCopied = false;
+  }
+
+  closeShareModal(): void {
+    this.shareModalQuiz = null;
+    this.shareCopied = false;
+  }
+
+  getShareMessage(quiz: Quiz): string {
+    const totalMarks = (quiz.questions || []).reduce((s, q) => s + (q.marks || 0), 0);
+    return `🔑 Quiz Code: ${quiz.code}\nQuiz Title: ${quiz.title}\nQuestions: ${quiz.questions.length} | Marks: ${totalMarks}\nUse this code to attend the quiz on QuizForge!`;
+  }
+
+  async copyShareMessage(quiz: Quiz): Promise<void> {
+    const msg = this.getShareMessage(quiz);
+    try {
+      await navigator.clipboard.writeText(msg);
+      this.shareCopied = true;
+      setTimeout(() => this.shareCopied = false, 2500);
+    } catch {
+      alert(msg);
     }
   }
 
