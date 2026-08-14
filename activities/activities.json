@@ -1,5 +1,15 @@
 [
   {
+    "activityId": "act_k6hnefz5",
+    "timestamp": "2026-08-14T03:20:24.930Z",
+    "actorEmail": "fejinfm2000@gmail.com",
+    "actorRole": "admin",
+    "actionType": "INVIGILATOR_ADDED",
+    "targetId": "chramlinjeniferambrose@gmail.com",
+    "targetType": "invigilator",
+    "description": "Added invigilator chramlinjeniferambrose@gmail.com"
+  },
+  {
     "activityId": "act_sj1tbl6t",
     "timestamp": "2026-08-13T06:33:21.422Z",
     "actorEmail": "fejinf@clarium.tech",
