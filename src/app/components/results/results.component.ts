@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExcelService } from '../../services/excel.service';
-import { AttendeeResult } from '../../models/quiz.models';
+import { QuizService } from '../../services/quiz.service';
+import { AttendeeResult, Quiz } from '../../models/quiz.models';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-results',
@@ -11,15 +13,18 @@ import { AttendeeResult } from '../../models/quiz.models';
   templateUrl: './results.component.html',
   styleUrls: ['./results.component.scss']
 })
-export class ResultsComponent implements OnInit {
+export class ResultsComponent implements OnInit, OnDestroy {
   result: AttendeeResult | null = null;
+  quiz: Quiz | null = null;
   quizId = '';
   history: AttendeeResult[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private excel: ExcelService
+    private excel: ExcelService,
+    private quizService: QuizService
   ) {}
 
   ngOnInit(): void {
@@ -29,6 +34,7 @@ export class ResultsComponent implements OnInit {
       this.result = JSON.parse(raw);
     } else {
       this.router.navigate(['/dashboard']);
+      return;
     }
 
     try {
@@ -39,6 +45,52 @@ export class ResultsComponent implements OnInit {
     } catch {
       this.history = [];
     }
+
+    // Load the quiz to get full question details
+    this.loadQuizDetails();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private async loadQuizDetails(): Promise<void> {
+    if (!this.result) return;
+    try {
+      this.quiz = await this.quizService.getQuiz(this.result.quizId);
+    } catch (error) {
+      console.error('Failed to load quiz details:', error);
+    }
+  }
+
+  getAnswerForQuestion(questionId: string) {
+    return this.result?.answers?.find(a => a.questionId === questionId);
+  }
+
+  isSelectedOption(questionId: string, optionId: string): boolean {
+    const ans = this.getAnswerForQuestion(questionId);
+    return !!(ans?.selectedOptionIds && ans.selectedOptionIds.includes(optionId));
+  }
+
+  isCorrectOption(questionId: string, optionId: string): boolean {
+    const q = this.quiz?.questions.find(item => item.questionId === questionId);
+    return !!(q?.correctAnswers && q.correctAnswers.includes(optionId));
+  }
+
+  getOptionState(questionId: string, optionId: string): 'correct-selected' | 'wrong-selected' | 'correct-unselected' | 'normal' {
+    const selected = this.isSelectedOption(questionId, optionId);
+    const correct = this.isCorrectOption(questionId, optionId);
+
+    if (selected && correct) return 'correct-selected';
+    if (selected && !correct) return 'wrong-selected';
+    if (!selected && correct) return 'correct-unselected';
+    return 'normal';
+  }
+
+  isInputCorrect(questionId: string): boolean {
+    const ans = this.getAnswerForQuestion(questionId);
+    return !!ans?.isCorrect;
   }
 
   get grade(): string {

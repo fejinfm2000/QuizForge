@@ -1,24 +1,20 @@
 # QuizForge
-<<<<<<< HEAD
-Dynamic Quiz Market
-=======
 
-An Angular 17 quiz platform where admins upload Excel-based quizzes and attendees complete them in-browser. All data (quiz definitions + attendee results) is stored directly in a GitHub repository via the GitHub API.
+An Angular 17 quiz platform where admins, invigilators, and candidates collaborate on Excel-defined quizzes stored in GitHub.
 
 ---
 
 ## Features
 
-| # | Feature |
-|---|---------|
-| 1 | Email-based login — email is the primary key for every attendee |
-| 2 | Download a blank Excel template with sample questions |
-| 3 | Upload a filled Excel → instantly generates a quiz page |
-| 4 | Timed quiz with a question map and per-question navigation |
-| 5 | Results page with grade, score breakdown and answer review |
-| 6 | Results saved to GitHub as an `attendees.xlsx` per quiz |
-| 7 | Admin can download full attendees list (score, grade, all details) |
-| 8 | Each quiz has its own isolated attendees file in GitHub |
+- Admin and invigilator dashboard access with role-based permissions
+- Email-based attendee login and candidate flow
+- Download and upload quiz definitions via Excel
+- GitHub persistence for quiz definitions and attendee submissions
+- Activity logging and usage statistics
+- Theme toggle persisted in browser session storage
+- Responsive UI for desktop and small-screen devices
+- No automatic countdown timer; quizzes are completed at the user’s pace
+- Result review with score, answer feedback, and attendance export
 
 ---
 
@@ -28,24 +24,24 @@ An Angular 17 quiz platform where admins upload Excel-based quizzes and attendee
 src/
 ├── app/
 │   ├── components/
-│   │   ├── login/          # Email + Name login
-│   │   ├── dashboard/      # Attend & Manage tabs
-│   │   ├── quiz/           # Timed quiz UI
-│   │   └── results/        # Score + answer review
-│   ├── services/
-│   │   ├── auth.service.ts     # Session-based auth
-│   │   ├── github.service.ts   # GitHub REST API wrapper
-│   │   ├── quiz.service.ts     # Quiz CRUD via GitHub
-│   │   └── excel.service.ts    # xlsx parse / generate
+│   │   ├── dashboard/      # Admin and invigilator dashboard
+│   │   ├── login/          # Email login and role flow
+│   │   ├── quiz/           # Quiz taking and submission
+│   │   └── results/        # Score review and answer breakdown
 │   ├── guards/
-│   │   └── auth.guard.ts
+│   │   └── auth.guard.ts   # Route authorization
 │   ├── models/
-│   │   └── quiz.models.ts
-│   └── pipes/
-│       └── total-marks.pipe.ts
+│   │   └── quiz.models.ts  # Domain models
+│   └── services/
+│       ├── activity.service.ts  # Activity logging
+│       ├── auth.service.ts      # Session auth and user state
+│       ├── excel.service.ts     # Excel import/export
+│       ├── github.service.ts    # GitHub REST API persistence
+│       ├── quiz.service.ts      # Quiz and attendee management
+│       └── theme.service.ts     # Theme persistence
 └── environments/
-    ├── environment.ts.example   ← copy to environment.ts and configure
-    ├── environment.ts           ← .gitignored — your real secrets go here
+    ├── environment.ts.example
+    ├── environment.ts
     └── environment.prod.ts
 ```
 
@@ -53,13 +49,15 @@ src/
 
 ## GitHub Repository Layout
 
-After the first quiz upload, the target repo will look like:
+The app saves quizzes under the configured `basePath` in GitHub.
+
+Example layout:
 
 ```
 quizzes/
-└── javascript-fundamentals/
-    ├── quiz.json          ← Question definitions
-    └── attendees.xlsx     ← Attendee results (appended per attempt)
+├── my-quiz/
+│   ├── quiz.json          # Quiz definition
+│   └── attendees.xlsx     # Attendee submissions
 ```
 
 ---
@@ -77,17 +75,18 @@ npm install
 ### 2. Create a GitHub Personal Access Token
 
 1. Go to <https://github.com/settings/tokens>
-2. Click **Generate new token (classic)**
-3. Select scope: **`repo`** (full control of private repositories)
-4. Copy the token
+2. Generate a token with the `repo` scope
+3. Copy the token
 
-### 3. Configure Environment
+### 3. Configure Local Environment
+
+Create `src/environments/environment.ts` from the example:
 
 ```bash
-cp src/environments/environment.ts.example src/environments/environment.ts
+copy src\environments\environment.ts.example src\environments\environment.ts
 ```
 
-Edit `src/environments/environment.ts`:
+Edit the copied file with your GitHub settings:
 
 ```ts
 export const environment = {
@@ -95,67 +94,75 @@ export const environment = {
   github: {
     token: 'ghp_YOUR_REAL_TOKEN',
     owner: 'your-github-username',
-    repo:  'your-quiz-data-repo',   // must already exist
+    repo: 'your-quiz-data-repo',
     branch: 'main',
     basePath: 'quizzes'
   }
 };
 ```
 
-> **Security:** `environment.ts` is `.gitignore`d. Never commit your token.
+> `src/environments/environment.ts` should remain local and not be committed.
 
-### 4. Create the GitHub Repo for Data
-
-Create an empty repo on GitHub (e.g. `quiz-data`). It can be private. No files needed — the app initialises the folder structure on first upload.
-
-### 5. Run
+### 4. Run Locally
 
 ```bash
 npm start
-# → http://localhost:4200
 ```
+
+Open `http://localhost:4200/` in your browser.
 
 ---
 
 ## Excel Template Format
 
-Download the template from the Dashboard → **Manage Quizzes** → **Download Template**.
+The quiz upload template uses these columns:
 
 | Column | Description |
 |--------|-------------|
-| Question | Full question text |
+| Question | Quiz question text |
 | Option A | Choice A |
 | Option B | Choice B |
 | Option C | Choice C |
 | Option D | Choice D |
-| Correct Answer (A/B/C/D) | Single letter |
-| Marks | Integer (e.g. 1, 2, 5) |
+| Correct Answer (A/B/C/D) | Correct option letter |
+| Marks | Numeric score value |
 
 ---
 
-## Production Deployment
+## Usage
 
-For production, inject secrets at build time via CI/CD rather than committing `environment.prod.ts`.
+- Admins and invigilators upload quizzes using the Excel template.
+- Candidates log in with email and take a quiz.
+- Submitted results are stored in GitHub per quiz.
+- Attendance can be exported from the dashboard.
+- Theme preference persists across the browser session.
 
-Example GitHub Actions step:
+---
 
-```yaml
-- name: Build
-  env:
-    GITHUB_TOKEN: ${{ secrets.QUIZ_GITHUB_TOKEN }}
-    GITHUB_OWNER: ${{ secrets.QUIZ_GITHUB_OWNER }}
-    GITHUB_REPO:  ${{ secrets.QUIZ_GITHUB_REPO }}
-  run: npm run build -- --configuration production
+## Testing
+
+Run unit tests once with:
+
+```bash
+npm test -- --watch=false
 ```
 
-Then update `environment.prod.ts` to read from `window.__ENV__` which you populate from a server-rendered `<script>` block.
+---
+
+## Production Build
+
+Build the application with:
+
+```bash
+npm run build
+```
+
+The build output is generated in `dist/quiz-app`.
 
 ---
 
-## Tech Stack
+## Notes
 
-- **Angular 17** (standalone components, signals-ready)
-- **xlsx** — Excel parsing & generation
-- **GitHub REST API v3** — storage backend (no server required)
-- **DM Sans + Playfair Display** — typography
->>>>>>> 4b09c27 (Initial commit: QuizForge application with improved GitHub error handling)
+- Configure a GitHub repo for data storage with the settings in `environment.ts`.
+- The app uses GitHub as the backend, so no separate server is required.
+- For production, inject secrets through environment variables or CI instead of committing tokens.

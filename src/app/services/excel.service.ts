@@ -11,17 +11,18 @@ export class ExcelService {
   downloadQuizTemplate(): void {
     const headers = [
       'Question',
-      'Option A',
-      'Option B',
-      'Option C',
-      'Option D',
-      'Correct Answer (A/B/C/D)',
+      'QuestionType (single_choice|multi_choice|input_box)',
+      'Options (semicolon-separated for choices)',
+      'Correct Answers (semicolon/comma-separated option ids)',
+      'MaxLength (for input_box)',
+      'CorrectAnswerText (for input_box)',
       'Marks'
     ];
 
     const sample = [
-      ['What is the capital of France?', 'London', 'Paris', 'Berlin', 'Madrid', 'B', 1],
-      ['2 + 2 = ?', '3', '4', '5', '6', 'B', 1]
+      ['What is the capital of France?', 'single_choice', 'A) London;B) Paris;C) Berlin;D) Madrid', 'B', '', '', 1],
+      ['Which of the following are programming languages?', 'multi_choice', 'A) Python;B) HTML;C) Java;D) Photoshop', 'A;C', '', '', 2],
+      ['Name the protocol used for web requests', 'input_box', '', '', 100, 'HTTP', 1]
     ];
 
     const wb = XLSX.utils.book_new();
@@ -46,20 +47,61 @@ export class ExcelService {
           const ws = wb.Sheets[wb.SheetNames[0]];
           const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-          // Skip header row
+          // Skip header row and support legacy template
           const questions: QuizQuestion[] = rows
             .slice(1)
             .filter(r => r[0]) // skip empty rows
-            .map((r, i) => ({
-              id: i + 1,
-              question: String(r[0] ?? '').trim(),
-              optionA: String(r[1] ?? '').trim(),
-              optionB: String(r[2] ?? '').trim(),
-              optionC: String(r[3] ?? '').trim(),
-              optionD: String(r[4] ?? '').trim(),
-              correctAnswer: String(r[5] ?? 'A').trim().toUpperCase() as 'A' | 'B' | 'C' | 'D',
-              marks: Number(r[6]) || 1
-            }));
+            .map((r, i) => {
+              const firstData = String(r[1] ?? '').trim();
+              // Detect legacy (Option A..D in columns) if second column doesn't contain a questionType
+              const isLegacy = ['single_choice','multi_choice','input_box'].indexOf(firstData) === -1 && (r[1] !== undefined && r[2] !== undefined && r[3] !== undefined && r[4] !== undefined);
+
+              if (isLegacy) {
+                // legacy mapping
+                const opts = [
+                  { id: 'A', text: String(r[1] ?? '').trim() },
+                  { id: 'B', text: String(r[2] ?? '').trim() },
+                  { id: 'C', text: String(r[3] ?? '').trim() },
+                  { id: 'D', text: String(r[4] ?? '').trim() }
+                ];
+                return {
+                  questionId: `q-${i+1}`,
+                  questionText: String(r[0] ?? '').trim(),
+                  questionType: 'single_choice',
+                  options: opts,
+                  correctAnswers: [String(r[5] ?? 'A').trim().toUpperCase()],
+                  marks: Number(r[6]) || 1
+                } as QuizQuestion;
+              }
+
+              // New template mapping
+              const questionText = String(r[0] ?? '').trim();
+              const questionType = (String(r[1] ?? 'single_choice').trim() || 'single_choice') as any;
+              const optionsRaw = String(r[2] ?? '').trim();
+              const options = optionsRaw ? optionsRaw.split(/;|\|/).map((s, idx) => {
+                const parts = s.split(')');
+                if (parts.length > 1) return { id: parts[0].trim(), text: parts.slice(1).join(')').trim() };
+                return { id: String(idx+1), text: s.trim() };
+              }) : undefined;
+
+              const correctRaw = String(r[3] ?? '').trim();
+              const correctAnswers = correctRaw ? correctRaw.split(/[,;]\s*/).map((s: string) => s.trim()) : undefined;
+
+              const maxLength = Number(r[4]) || undefined;
+              const correctAnswerText = String(r[5] ?? '').trim() || undefined;
+              const marks = Number(r[6]) || 1;
+
+              return {
+                questionId: `q-${i+1}`,
+                questionText,
+                questionType,
+                options,
+                correctAnswers,
+                maxLength,
+                correctAnswerText,
+                marks
+              } as QuizQuestion;
+            });
 
           if (questions.length === 0) {
             reject(new Error('No questions found. Check the template format.'));

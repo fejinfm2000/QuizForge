@@ -33,8 +33,11 @@ export class LoginComponent {
       return;
     }
     this.loading = true;
-    this.auth.login(this.email, this.name);
-    await this.router.navigate(['/dashboard']);
-    this.loading = false;
+    try {
+      await this.auth.login(this.email, this.name);
+      await this.router.navigate(['/dashboard']);
+    } finally {
+      this.loading = false;
+    }
   }
 }

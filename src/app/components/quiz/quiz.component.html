@@ -13,6 +13,16 @@
     <button class="btn-back" routerLink="/dashboard">← Back to Dashboard</button>
   </div>
 
+  <!-- Already Attempted Warning -->
+  <div class="center-state" *ngIf="!loading && !error && alreadyAttempted && !isTestMode">
+    <div class="err-icon">🚫</div>
+    <h3>Quiz Already Submitted</h3>
+    <p>You have already submitted this quiz on {{ previousAttempt?.attemptedAt | date:'medium' }}</p>
+    <p>Your score: <strong>{{ previousAttempt?.percentage?.toFixed(1) || 0 }}%</strong> ({{ previousAttempt?.marksEarned }}/{{ previousAttempt?.totalMarks }} marks)</p>
+    <p style="color: var(--text-muted); font-size: 14px;">Re-submission is not allowed. Contact your invigilator if you need to retake this quiz.</p>
+    <button class="btn-back" routerLink="/dashboard">← Back to Dashboard</button>
+  </div>
+
   <!-- Quiz UI -->
   <ng-container *ngIf="!loading && !error && quiz">
 
@@ -23,17 +33,14 @@
         <h1>{{ quiz.title }}</h1>
       </div>
       <div class="quiz-meta-bar">
-        <div class="timer" [class.warning]="timerWarning">
-          <span class="timer-icon">⏱</span>
-          {{ timerDisplay }}
-        </div>
         <div class="progress-chip">
           {{ currentIndex + 1 }} / {{ quiz.questions.length }}
         </div>
         <button
           class="btn-submit-top"
           (click)="submitQuiz()"
-          [disabled]="submitting"
+          [disabled]="submitting || alreadyAttempted || isTestMode === false && alreadyAttempted"
+          [title]="alreadyAttempted ? 'Quiz already submitted' : 'Submit your answers'"
         >
           {{ submitting ? 'Submitting…' : 'Submit Quiz' }}
         </button>
@@ -51,25 +58,33 @@
       <!-- Question Panel -->
       <div class="question-panel" *ngIf="currentQuestion">
         <div class="q-number">Question {{ currentIndex + 1 }}</div>
-        <div class="q-marks-badge">{{ currentQuestion.marks }} {{ currentQuestion.marks === 1 ? 'mark' : 'marks' }}</div>
+        <div class="q-marks-badge">{{ currentQuestion.marks || currentQuestion.marks === 0 ? currentQuestion.marks : '' }} {{ (currentQuestion.marks || 0) === 1 ? 'mark' : 'marks' }}</div>
 
-        <p class="q-text">{{ currentQuestion.question }}</p>
+        <p class="q-text">{{ currentQuestion.questionText }}</p>
 
-        <div class="options-grid">
+        <div class="options-grid" *ngIf="currentQuestion.questionType === 'single_choice' || currentQuestion.questionType === 'multi_choice'">
           <button
-            *ngFor="let opt of ['A','B','C','D']"
+            *ngFor="let opt of currentQuestion.options"
             class="option-btn"
-            [class.selected]="getSelected() === opt"
-            (click)="selectOption($any(opt))"
+            [class.selected]="getSelectedForCurrent().indexOf(opt.id) !== -1"
+            (click)="currentQuestion.questionType === 'single_choice' ? selectSingle(opt.id) : toggleMulti(opt.id)"
           >
-            <span class="opt-label">{{ opt }}</span>
-            <span class="opt-text">
-              {{ opt === 'A' ? currentQuestion.optionA :
-                 opt === 'B' ? currentQuestion.optionB :
-                 opt === 'C' ? currentQuestion.optionC :
-                               currentQuestion.optionD }}
-            </span>
+            <span class="opt-label">{{ opt.id }}</span>
+            <span class="opt-text">{{ opt.text }}</span>
           </button>
+        </div>
+
+        <div *ngIf="currentQuestion.questionType === 'input_box'" class="input-box-wrap">
+          <input
+            type="text"
+            class="quiz-input"
+            [attr.maxlength]="currentQuestion.maxLength || 500"
+            [value]="(answers.get(currentQuestion.questionId)?.textAnswer) || ''"
+            (input)="setTextAnswer($any($event.target).value)"
+            placeholder="Type your answer here…"
+            autocomplete="off"
+          />
+          <div class="char-count">{{ (answers.get(currentQuestion.questionId)?.textAnswer || '').length }} / {{ currentQuestion.maxLength || 500 }}</div>
         </div>
 
         <div class="nav-btns">

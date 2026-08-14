@@ -15,6 +15,17 @@ export const routes: Routes = [
       import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard],
+    data: { roles: ['admin'] },
+    loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent)
+  },
+  {
     path: 'quiz/:id',
     canActivate: [authGuard],
     loadComponent: () =>

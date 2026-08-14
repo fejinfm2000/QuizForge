@@ -11,6 +11,7 @@ export const environment = {
     repo: (window as any).__ENV__?.GITHUB_REPO || '',
     branch: 'main',
     basePath: 'quizzes',
-    admins: ['fejinfm2000@gmail.com','admin@gmail.com']
+    admins: ['fejinfm2000@gmail.com','admin@gmail.com'],
+    invigilators: ['invigilator@example.com']
   }
 };

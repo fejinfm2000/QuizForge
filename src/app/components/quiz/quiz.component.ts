@@ -16,16 +16,16 @@ export class QuizComponent implements OnInit {
   quiz: Quiz | null = null;
   loading = true;
   error = '';
+  isTestMode = false;
+  alreadyAttempted = false;
+  previousAttempt: AttendeeResult | null = null;
 
   // Quiz state
   currentIndex = 0;
-  answers: Map<number, 'A' | 'B' | 'C' | 'D' | null> = new Map();
+  answers: Map<string, { selectedOptionIds?: string[]; textAnswer?: string }> = new Map();
   submitted = false;
   submitting = false;
 
-  // Timer
-  timeLeft = 0;
-  timerInterval: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -36,21 +36,45 @@ export class QuizComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id')!;
+    // read test mode flag from query params
+    const testParam = this.route.snapshot.queryParamMap.get('test');
+    this.isTestMode = testParam === 'true' || testParam === '1';
     try {
       this.quiz = await this.quizService.getQuiz(id);
       if (!this.quiz) {
         this.error = 'Quiz not found.';
       } else {
-        // Init all answers to null
-        this.quiz.questions.forEach(q => this.answers.set(q.id, null));
-        // 90 seconds per question
-        this.timeLeft = this.quiz.questions.length * 90;
-        this.startTimer();
+        // Init answers map for each question
+        this.quiz.questions.forEach(q => this.answers.set(q.questionId, {}));
+        
+        // Check if user has already attempted this quiz
+        this.checkPreviousAttempt(id);
       }
     } catch (e: any) {
       this.error = e?.message ?? 'Failed to load quiz.';
     } finally {
       this.loading = false;
+    }
+  }
+
+  private checkPreviousAttempt(quizId: string): void {
+    try {
+      const historyRaw = localStorage.getItem('quiz_history');
+      if (!historyRaw) return;
+
+      const history: AttendeeResult[] = JSON.parse(historyRaw);
+      const currentUserEmail = this.auth.currentUser?.email;
+      
+      const previousAttempt = history.find(
+        h => h.quizId === quizId && h.email === currentUserEmail && !h.isTestMode
+      );
+
+      if (previousAttempt) {
+        this.alreadyAttempted = true;
+        this.previousAttempt = previousAttempt;
+      }
+    } catch (error) {
+      console.error('Failed to check previous attempts:', error);
     }
   }
 
@@ -67,17 +91,41 @@ export class QuizComponent implements OnInit {
 
   get answeredCount(): number {
     let count = 0;
-    this.answers.forEach(v => { if (v !== null) count++; });
+    this.quiz?.questions.forEach(q => {
+      const a = this.answers.get(q.questionId);
+      if (!a) return;
+      if (q.questionType === 'input_box') { if (a.textAnswer && a.textAnswer.trim().length) count++; }
+      else { if (a.selectedOptionIds && a.selectedOptionIds.length) count++; }
+    });
     return count;
   }
 
-  selectOption(opt: 'A' | 'B' | 'C' | 'D'): void {
+  // Single choice select
+  selectSingle(optId: string): void {
     if (this.submitted || !this.currentQuestion) return;
-    this.answers.set(this.currentQuestion.id, opt);
+    this.answers.set(this.currentQuestion.questionId, { selectedOptionIds: [optId] });
   }
 
-  getSelected(): 'A' | 'B' | 'C' | 'D' | null {
-    return this.currentQuestion ? (this.answers.get(this.currentQuestion.id) ?? null) : null;
+  // Multi choice toggle
+  toggleMulti(optId: string): void {
+    if (this.submitted || !this.currentQuestion) return;
+    const qid = this.currentQuestion.questionId;
+    const cur = this.answers.get(qid) || {};
+    const set = new Set(cur.selectedOptionIds || []);
+    if (set.has(optId)) set.delete(optId); else set.add(optId);
+    this.answers.set(qid, { ...cur, selectedOptionIds: Array.from(set) });
+  }
+
+  setTextAnswer(value: string): void {
+    if (this.submitted || !this.currentQuestion) return;
+    this.answers.set(this.currentQuestion.questionId, { textAnswer: value });
+  }
+
+  getSelectedForCurrent(): string[] {
+    const q = this.currentQuestion;
+    if (!q) return [];
+    const a = this.answers.get(q.questionId);
+    return a?.selectedOptionIds ?? [];
   }
 
   goTo(index: number): void {
@@ -91,38 +139,24 @@ export class QuizComponent implements OnInit {
 
   isAnswered(index: number): boolean {
     const q = this.quiz?.questions[index];
-    return q ? this.answers.get(q.id) !== null : false;
+    if (!q) return false;
+    const a = this.answers.get(q.questionId);
+    if (!a) return false;
+    if (q.questionType === 'input_box') return !!(a.textAnswer && a.textAnswer.trim().length);
+    return !!(a.selectedOptionIds && a.selectedOptionIds.length);
   }
 
-  // ── Timer ──────────────────────────────────────────────────────────────────
 
-  startTimer(): void {
-    this.timerInterval = setInterval(() => {
-      if (this.timeLeft > 0) {
-        this.timeLeft--;
-      } else {
-        this.submitQuiz();
-      }
-    }, 1000);
-  }
-
-  get timerDisplay(): string {
-    const m = Math.floor(this.timeLeft / 60).toString().padStart(2, '0');
-    const s = (this.timeLeft % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-
-  get timerWarning(): boolean { return this.timeLeft < 60; }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
   async submitQuiz(): Promise<void> {
     if (this.submitting || this.submitted || !this.quiz) return;
-    clearInterval(this.timerInterval);
+    // No timer behavior — quizzes are untimed per spec
     this.submitting = true;
 
     const user = this.auth.currentUser!;
-    const totalMarks = this.quiz.questions.reduce((s, q) => s + q.marks, 0);
+    const totalMarks = this.quiz.questions.reduce((s, q) => s + (q.marks || 0), 0);
 
     let marksEarned = 0;
     let correct = 0;
@@ -130,25 +164,45 @@ export class QuizComponent implements OnInit {
     let skipped = 0;
 
     const detailedAnswers: QuizAnswer[] = this.quiz.questions.map(q => {
-      const selected = this.answers.get(q.id) ?? null;
-      const isCorrect = selected === q.correctAnswer;
-      const earned = isCorrect ? q.marks : 0;
+      const a = this.answers.get(q.questionId) || {};
+      let isCorrect = false;
+      let earned = 0;
 
-      if (selected === null) skipped++;
-      else if (isCorrect) { correct++; marksEarned += earned; }
-      else wrong++;
+      if (q.questionType === 'single_choice') {
+        const sel = a.selectedOptionIds ? a.selectedOptionIds[0] : undefined;
+        if (!sel) skipped++;
+        else {
+          if (q.correctAnswers && q.correctAnswers.includes(sel)) { isCorrect = true; earned = q.marks || 0; correct++; marksEarned += earned; }
+          else { wrong++; }
+        }
+        return { questionId: q.questionId, selectedOptionIds: sel ? [sel] : [], isCorrect, marksEarned: earned } as QuizAnswer;
+      }
 
-      return {
-        questionId: q.id,
-        selectedOption: selected,
-        isCorrect,
-        marksEarned: earned
-      };
+      if (q.questionType === 'multi_choice') {
+        const sels = a.selectedOptionIds || [];
+        if (!sels.length) skipped++;
+        else {
+          const correctSet = new Set(q.correctAnswers || []);
+          const selSet = new Set(sels);
+          const equal = sels.length === (q.correctAnswers || []).length && sels.every(s => correctSet.has(s));
+          if (equal) { isCorrect = true; earned = q.marks || 0; correct++; marksEarned += earned; }
+          else { wrong++; }
+        }
+        return { questionId: q.questionId, selectedOptionIds: sels, isCorrect, marksEarned: earned } as QuizAnswer;
+      }
+
+      // input_box
+      const text = (a.textAnswer || '').trim();
+      if (!text) skipped++;
+      else if (q.correctAnswerText && q.correctAnswerText.trim().toLowerCase() === text.toLowerCase()) {
+        isCorrect = true; earned = q.marks || 0; correct++; marksEarned += earned;
+      } else { wrong++; }
+      return { questionId: q.questionId, textAnswer: text, isCorrect, marksEarned: earned } as QuizAnswer;
     });
 
     const result: AttendeeResult = {
       email: user.email,
-      name: user.name,
+      name: user.name || user.email,
       quizId: this.quiz.id,
       quizTitle: this.quiz.title,
       attemptedAt: new Date().toISOString(),
@@ -160,15 +214,20 @@ export class QuizComponent implements OnInit {
       totalMarks,
       marksEarned,
       percentage: totalMarks > 0 ? (marksEarned / totalMarks) * 100 : 0,
-      answers: detailedAnswers
+      answers: detailedAnswers,
+      isTestMode: this.isTestMode
     };
 
     try {
       await this.quizService.saveAttendeeResult(result);
       this.saveToHistory(result);
     } catch (e: any) {
-      console.error('Failed to save result to GitHub:', e);
-      alert('Note: Your result could not be saved to the server (GitHub). However, it has been saved to your local history.');
+      console.error('Failed to save result to GitHub or duplicate submission:', e);
+      if (e?.message && e.message.includes('already submitted')) {
+        alert('You have already submitted this quiz — multiple submissions are not allowed.');
+      } else {
+        alert('Note: Your result could not be saved to the server (GitHub). However, it has been saved to your local history.');
+      }
       this.saveToHistory(result);
     }
 
@@ -192,7 +251,4 @@ export class QuizComponent implements OnInit {
     }
   }
 
-  ngOnDestroy(): void {
-    clearInterval(this.timerInterval);
-  }
 }
