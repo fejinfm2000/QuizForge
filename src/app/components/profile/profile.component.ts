@@ -61,6 +61,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    // Always reset edit mode on init to avoid stale state from router caching
+    this.editing = false;
+    this.editedName = '';
+
     // Subscribe to theme changes
     this.theme.theme$
       .pipe(takeUntil(this.destroy$))

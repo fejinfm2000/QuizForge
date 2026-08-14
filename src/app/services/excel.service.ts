@@ -21,6 +21,7 @@ export class ExcelService {
 
     const sample = [
       ['What is the capital of France?', 'single_choice', 'A) London;B) Paris;C) Berlin;D) Madrid', 'B', '', '', 1],
+      ['Which of the following are programming languages?', 'multi_choice', 'A) Python;B) HTML;C) Java;D) Photoshop', 'A;C', '', '', 2],
       ['Name the protocol used for web requests', 'input_box', '', '', 100, 'HTTP', 1]
     ];
 

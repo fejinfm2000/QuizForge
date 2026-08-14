@@ -75,12 +75,15 @@
         </div>
 
         <div *ngIf="currentQuestion.questionType === 'input_box'" class="input-box-wrap">
-          <textarea
+          <input
+            type="text"
+            class="quiz-input"
             [attr.maxlength]="currentQuestion.maxLength || 500"
             [value]="(answers.get(currentQuestion.questionId)?.textAnswer) || ''"
             (input)="setTextAnswer($any($event.target).value)"
-            placeholder="Type your answer here"
-          ></textarea>
+            placeholder="Type your answer here…"
+            autocomplete="off"
+          />
           <div class="char-count">{{ (answers.get(currentQuestion.questionId)?.textAnswer || '').length }} / {{ currentQuestion.maxLength || 500 }}</div>
         </div>
 
