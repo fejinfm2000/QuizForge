@@ -1,5 +1,15 @@
 [
   {
+    "activityId": "act_vqq5inke",
+    "timestamp": "2026-08-14T04:40:26.284Z",
+    "actorEmail": "fejinfm2000@gmail.com",
+    "actorRole": "admin",
+    "actionType": "ATTENDANCE_DOWNLOADED",
+    "targetId": "mongodb-second-crew",
+    "targetType": "quiz",
+    "description": "Attendance downloaded for mongodb-second-crew"
+  },
+  {
     "activityId": "act_ekw5ecpn",
     "timestamp": "2026-08-14T03:40:01.306Z",
     "actorEmail": "fevin@gmail.com",
